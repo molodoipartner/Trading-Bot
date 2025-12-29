@@ -1,0 +1,17 @@
+{
+  "totalTrades": 583,
+  "profitableTrades": 583,
+  "losingTrades": 0,
+  "noneTrades": 0,
+  "longTrades": 583,
+  "shortTrades": 0,
+  "totalProfitQuoted": 3598.82,
+  "averageProfitQuoted": 6.17,
+  "maxProfitQuoted": 68.42348372624599,
+  "maxLossQuoted": -25.587686924286288,
+  "startBalance": 0,
+  "finalBalance": 3598.82,
+  "totalDaysInData": 734,
+  "winRate": 100,
+  "averageTradesPerDay": 0.79
+}

@@ -1,0 +1,23 @@
+{
+  "name": "bottest",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "bin": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js --ignore positions"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "child_process": "^1.0.2",
+    "csv-parser": "^3.2.0",
+    "csv-writer": "^1.6.0",
+    "dayjs": "^1.11.13",
+    "matplotlib": "^1.0.0",
+    "nodemon": "^3.1.10",
+    "python-shell": "^5.0.0"
+  }
+}
