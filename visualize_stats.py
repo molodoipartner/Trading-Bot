@@ -6,12 +6,12 @@ import numpy as np
 from scipy.stats import gaussian_kde
 from datetime import datetime
 from collections import defaultdict
-from dateutil.parser import parse as parse_datetime  # более гибкий парсер времени
+from dateutil.parser import parse as parse_datetime
 from matplotlib.patches import FancyBboxPatch
 
 # === Функция скользящего среднего ===
 def moving_average(data, window_size=3):
-    return np.convolve(data, np.ones(window_size) / window_size, mode='same')
+    return np.convolve(data, np.ones(window_size) / window_size, mode="same")
 
 # === Пути к JSON ===
 file_path = "positions/trades.json"
@@ -31,50 +31,97 @@ with open(file_path, "r", encoding="utf-8") as f:
 with open(stats_path, "r", encoding="utf-8") as f:
     stats = json.load(f)
 
+# ======================================================
+# === СООТНОШЕНИЕ totalProfitQuoted / volumessum ===
+# ======================================================
+
+total_profit = float(stats.get("totalProfitQuoted", 0))
+trade_volume_sum = float(trades[0].get("volumessum", 0))
+
+if trade_volume_sum != 0:
+    profit_to_volume_ratio = total_profit / trade_volume_sum
+    profit_to_volume_ratio_display = f"{profit_to_volume_ratio:.4f}"
+else:
+    profit_to_volume_ratio_display = "N/A"
+
+print("total_profit:", total_profit)
+print("trade_volume_sum:", trade_volume_sum)
+print("ratio:", profit_to_volume_ratio if trade_volume_sum != 0 else "N/A")
+
 # === Создание визуальной панели ===
 fig, ax = plt.subplots(figsize=(10, 8))
 ax.axis("off")
 fig.patch.set_facecolor("white")
-plt.title("Общая статистика торговли", fontsize=16, fontweight="bold", loc="left", pad=20)
 
-# Пары ключ-значение
+plt.title(
+    "Общая статистика торговли",
+    fontsize=16,
+    fontweight="bold",
+    loc="left",
+    pad=20
+)
+
+# === Пары ключ-значение ===
 info_lines = [
     ("Всего дней в данных", stats["totalDaysInData"]),
     ("Всего сделок", stats["totalTrades"]),
     ("Профитных сделок", stats["profitableTrades"]),
     ("Убыточных сделок", stats["losingTrades"]),
     ("Win rate", f"{stats['winRate']}%"),
-    ("Средняя прибыль", f"{stats['averageProfitQuoted']}"),
-    ("Макс. прибыль", f"{stats['maxProfitQuoted']}"),
-    ("Макс. убыток", f"{stats['maxLossQuoted']}"),
+    ("Средняя прибыль", stats["averageProfitQuoted"]),
+    ("Макс. прибыль", stats["maxProfitQuoted"]),
+    ("Макс. убыток", stats["maxLossQuoted"]),
     ("Ср. сделок в день", stats["averageTradesPerDay"]),
     ("LONG-сделок", stats["longTrades"]),
     ("SHORT-сделок", stats["shortTrades"]),
-    ("Стартовый баланс", stats["startBalance"]),
-    ("Финальный баланс", stats["finalBalance"]),
-    ("Общий профит", stats["totalProfitQuoted"]),
+#    ("Стартовый баланс", stats["startBalance"]),
+#    ("Финальный баланс", stats["finalBalance"]),
+    ("Общий профит", total_profit),
+    ("Объём сделки (volumessum)", trade_volume_sum),
+    ("Профит / объём сделки", profit_to_volume_ratio_display),
 ]
 
-# Цвета и стили
+# === Цвета и стили ===
 label_color = "#333333"
 value_color = "#0055A4"
 row_height = 0.06
 
-# Рисуем обрамлённые строки
+# === Отрисовка строк ===
 for i, (label, value) in enumerate(info_lines):
     y = 0.95 - i * row_height
-    # Подложка
-    box = FancyBboxPatch((0.03, y - 0.03), 0.94, 0.05, boxstyle="round,pad=0.01", 
-                         linewidth=1, edgecolor="#DDDDDD", facecolor="#F7F7F7")
+
+    box = FancyBboxPatch(
+        (0.03, y - 0.03),
+        0.94,
+        0.05,
+        boxstyle="round,pad=0.01",
+        linewidth=1,
+        edgecolor="#DDDDDD",
+        facecolor="#F7F7F7"
+    )
     ax.add_patch(box)
-    # Лейбл и значение
-    ax.text(0.05, y, f"{label}:", fontsize=12, ha="left", va="top", color=label_color)
-    ax.text(0.95, y, f"{value}", fontsize=12, ha="right", va="top", color=value_color)
+
+    ax.text(
+        0.05, y,
+        f"{label}:",
+        fontsize=12,
+        ha="left",
+        va="top",
+        color=label_color
+    )
+
+    ax.text(
+        0.95, y,
+        f"{value}",
+        fontsize=12,
+        ha="right",
+        va="top",
+        color=value_color
+    )
 
 plt.tight_layout()
-plt.savefig("result/trade_stats_summary.png", dpi=150)
+plt.savefig("result/topresult/trade_stats_summary.png", dpi=150)
 plt.close()
-
 
 
 
@@ -359,7 +406,7 @@ plt.title("Накопленная прибыль/убыток по времен�
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
-plt.savefig("result/profit_by_time.png")
+plt.savefig("result/topresult/profit_by_time.png")
 plt.close()
 
 """

@@ -22,7 +22,8 @@ const runMorningQuintupleLongStrategy = async (candles, config) => {
     FOURTH_ADD_PERCENT,
     FIFTH_ADD_PERCENT,
     LOOKBACK_HOURS,
-    MIN_DROP_PERCENT1
+    MIN_DROP_PERCENT1,
+    volumessum
   } = config;
 
   const trades = [];
@@ -38,8 +39,7 @@ const runMorningQuintupleLongStrategy = async (candles, config) => {
     return date.toISOString().slice(0, 16).replace("T", " ");
   };
 
-                // Минимальная просадка за 3 часа
-                const MIN_DROP_PERCENT = MIN_DROP_PERCENT1 / 100; // 0.6%
+                const MIN_DROP_PERCENT = MIN_DROP_PERCENT1 / 100;
 
                 const isDropOverPeriod = (candles, currentIndex) => {
                   if (currentIndex < LOOKBACK_HOURS) return false;
@@ -50,12 +50,20 @@ const runMorningQuintupleLongStrategy = async (candles, config) => {
                   );
 
                   const openFirst = slice[0].open;
-                  const lowMin = Math.min(...slice.map(c => c.low));
 
-                  // Просадка за весь период
-                  const dropPercent = (openFirst - lowMin) / openFirst;
+                  if (MIN_DROP_PERCENT === 0) return false;
 
-                  return dropPercent >= MIN_DROP_PERCENT;
+                  if (MIN_DROP_PERCENT > 0) {
+                    // 📉 Проверка падения
+                    const lowMin = Math.min(...slice.map(c => c.low));
+                    const dropPercent = (openFirst - lowMin) / openFirst;
+                    return dropPercent >= MIN_DROP_PERCENT;
+                  } else {
+                    // 📈 Проверка роста
+                    const highMax = Math.max(...slice.map(c => c.high));
+                    const risePercent = (highMax - openFirst) / openFirst;
+                    return risePercent >= Math.abs(MIN_DROP_PERCENT);
+                  }
                 };
 
 
@@ -235,6 +243,7 @@ const runMorningQuintupleLongStrategy = async (candles, config) => {
       profitQuoted: profit(exitWithSpread, entryWithSpread1, VOLUME1),
       spreadUsed: SPREAD,
       positionNumber: 1,
+      volumessum: volumessum
     });
 
     if (secondOpened)
@@ -253,6 +262,7 @@ const runMorningQuintupleLongStrategy = async (candles, config) => {
         profitQuoted: profit(exitWithSpread, entryWithSpread2, VOLUME2),
         spreadUsed: SPREAD,
         positionNumber: 2,
+        volumessum: volumessum
       });
 
     if (thirdOpened)
@@ -271,6 +281,7 @@ const runMorningQuintupleLongStrategy = async (candles, config) => {
         profitQuoted: profit(exitWithSpread, entryWithSpread3, VOLUME3),
         spreadUsed: SPREAD,
         positionNumber: 3,
+        volumessum: volumessum
       });
 
     if (fourthOpened)
@@ -289,6 +300,7 @@ const runMorningQuintupleLongStrategy = async (candles, config) => {
         profitQuoted: profit(exitWithSpread, entryWithSpread4, VOLUME4),
         spreadUsed: SPREAD,
         positionNumber: 4,
+        volumessum: volumessum
       });
 
     if (fifthOpened)
@@ -307,6 +319,7 @@ const runMorningQuintupleLongStrategy = async (candles, config) => {
         profitQuoted: profit(exitWithSpread, entryWithSpread5, VOLUME5),
         spreadUsed: SPREAD,
         positionNumber: 5,
+        volumessum: volumessum
       });
   }
 
