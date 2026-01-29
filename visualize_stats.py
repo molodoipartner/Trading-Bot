@@ -170,7 +170,8 @@ day_order = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 for d in day_order:
     if d not in weekday_stats:
         weekday_stats[d] = {"total": 0, "wins": 0, "losses": 0, "none": 0, "profit": 0.0}
-
+"""
+"""
 # === 📊 Сделки по часам ===
 hours = sorted(hour_stats.keys(), key=lambda x: int(x))
 wins_hour = [hour_stats[h]["wins"] for h in hours]
@@ -206,6 +207,9 @@ plt.tight_layout()
 plt.savefig("result/hour_profit.png")
 plt.close()
 
+
+"""
+
 # === 📅 Сделки по дням недели ===
 wins_day = [weekday_stats[d]["wins"] for d in day_order]
 losses_day = [weekday_stats[d]["losses"] for d in day_order]
@@ -239,7 +243,9 @@ plt.grid(True)
 plt.tight_layout()
 plt.savefig("result/weekday_profit.png")
 plt.close()
+"""
 
+"""
 # Количество лонг шорт позиций
 # Инициализация счётчиков
 stats2 = {
@@ -282,7 +288,8 @@ plt.tight_layout()
 os.makedirs("result", exist_ok=True)
 plt.savefig("result/direction_stats.png")
 plt.close()
-
+"""
+"""
 # Количество позиций по дистанции
 # Извлечение дистанций (с учетом результата сделки)
 long_distances = []
@@ -334,8 +341,8 @@ plt.tight_layout()
 os.makedirs("result", exist_ok=True)
 plt.savefig("result/distance_density_signed.png")
 plt.close()
-
-
+"""
+"""
 
 # 📈 2D-график: накопленная площадь профита/убытка
 # === 📈 2D-график: накопленная прибыль/убыток по времени ===
@@ -368,7 +375,7 @@ plt.grid(True)
 plt.tight_layout()
 plt.savefig("result/profit_by_index.png")
 plt.close()
-
+"""
 # 📈 График 2: накопленный профит по ВРЕМЕНИ
 cumulative_profit = 0
 cumulative_profits_time = []
@@ -408,6 +415,131 @@ plt.grid(True)
 plt.tight_layout()
 plt.savefig("result/topresult/profit_by_time.png")
 plt.close()
+
+from datetime import datetime
+
+# === Инициализация ===
+duration_hour_stats = {str(h).zfill(2): {"total": 0, "duration_sum": 0.0, "duration_avg": 0.0} for h in range(24)}
+
+for trade in trades:
+    # === фильтр по positionNumber ===
+    if trade.get("positionNumber") != 1:
+        continue
+
+    entry_time = trade.get("entryTime")
+    exit_time = trade.get("exitTime")
+
+    if not entry_time or not exit_time:
+        continue
+
+    try:
+        dt_entry = datetime.strptime(entry_time, "%Y-%m-%d %H:%M:%S")
+        dt_exit = datetime.strptime(exit_time, "%Y-%m-%d %H:%M:%S")
+        hour = dt_entry.strftime("%H")
+    except Exception as e:
+        print(f"Ошибка разбора времени {entry_time} или {exit_time}: {e}")
+        continue
+
+    # === длительность в часах ===
+    duration_hours = (dt_exit - dt_entry).total_seconds() / 3600
+
+    duration_hour_stats[hour]["total"] += 1
+    duration_hour_stats[hour]["duration_sum"] += duration_hours
+
+# === расчёт среднего ===
+for h in duration_hour_stats:
+    if duration_hour_stats[h]["total"] > 0:
+        duration_hour_stats[h]["duration_avg"] = duration_hour_stats[h]["duration_sum"] / duration_hour_stats[h]["total"]
+
+
+hours = sorted(duration_hour_stats.keys(), key=lambda x: int(x))
+duration_sum_hour = [round(duration_hour_stats[h]["duration_sum"], 2) for h in hours]
+duration_avg_hour = [round(duration_hour_stats[h]["duration_avg"], 2) for h in hours]
+total_trades_hour = [duration_hour_stats[h]["total"] for h in hours]
+
+plt.figure(figsize=(12, 6))
+plt.bar(hours, duration_sum_hour, color="blue")
+plt.xlabel("Час суток")
+plt.ylabel("Суммарная длительность (часы)")
+plt.title("Суммарная длительность сделок (positionNumber=1) по часам")
+plt.grid(True)
+plt.tight_layout()
+plt.savefig("result/hour_duration_sum_pos1.png")
+plt.close()
+
+plt.figure(figsize=(12, 6))
+plt.bar(hours, duration_avg_hour, label="Средняя длительность (ч)", color="orange")
+plt.plot(hours, total_trades_hour, color="black", linestyle="--", marker='o', label="Количество сделок")
+plt.xlabel("Час суток")
+plt.ylabel("Длительность (часы)")
+plt.title("Средняя длительность сделок (positionNumber=1) по часам")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.savefig("result/hour_duration_avg_pos1.png")
+plt.close()
+
+
+
+
+duration_weekday_stats = {d: {"total": 0, "duration_sum": 0.0, "duration_avg": 0.0} for d in day_order}
+for trade in trades:
+    # фильтр
+    if trade.get("positionNumber") != 1:
+        continue
+
+    entry_time = trade.get("entryTime")
+    exit_time = trade.get("exitTime")
+
+    if not entry_time or not exit_time:
+        continue
+
+    try:
+        dt_entry = datetime.strptime(entry_time, "%Y-%m-%d %H:%M:%S")
+        dt_exit = datetime.strptime(exit_time, "%Y-%m-%d %H:%M:%S")
+        weekday = dt_entry.strftime("%a")   # Mon, Tue, Wed, ...
+    except Exception as e:
+        print(f"Ошибка разбора времени {entry_time} или {exit_time}: {e}")
+        continue
+
+    duration_hours = (dt_exit - dt_entry).total_seconds() / 3600
+
+    duration_weekday_stats[weekday]["total"] += 1
+    duration_weekday_stats[weekday]["duration_sum"] += duration_hours
+
+for d in duration_weekday_stats:
+    if duration_weekday_stats[d]["total"] > 0:
+        duration_weekday_stats[d]["duration_avg"] = duration_weekday_stats[d]["duration_sum"] / duration_weekday_stats[d]["total"]
+
+import matplotlib.pyplot as plt
+
+days = day_order
+duration_sum_weekday = [round(duration_weekday_stats[d]["duration_sum"], 2) for d in days]
+duration_avg_weekday = [round(duration_weekday_stats[d]["duration_avg"], 2) for d in days]
+total_trades_weekday = [duration_weekday_stats[d]["total"] for d in days]
+
+plt.figure(figsize=(10, 5))
+plt.bar(days, duration_sum_weekday, color="steelblue")
+plt.xlabel("День недели")
+plt.ylabel("Суммарная длительность (часы)")
+plt.title("Суммарная длительность сделок (positionNumber=1) по дням недели")
+plt.grid(True, axis='y')
+plt.tight_layout()
+plt.savefig("result/weekday_duration_sum_pos1.png")
+plt.close()
+
+plt.figure(figsize=(10, 5))
+plt.bar(days, duration_avg_weekday, label="Средняя длительность (ч)", color="orange")
+plt.plot(days, total_trades_weekday, color="black", linestyle="--", marker='o', label="Количество сделок")
+plt.xlabel("День недели")
+plt.ylabel("Длительность / Кол-во")
+plt.title("Средняя длительность сделок (positionNumber=1) по дням недели")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.savefig("result/weekday_duration_avg_pos1.png")
+plt.close()
+
 
 """
 # === 📈 Кривая накопленной дистанции (без знака) ===

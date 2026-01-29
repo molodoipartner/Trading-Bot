@@ -60,9 +60,15 @@ async function runAll() {
   // generateSMA(sma3);
 
   await new Promise(resolve => setTimeout(resolve, 1000));
-  const startTimegenerate = new Date("2023-12-26 00:00:00");
-  const endTimegenerate = new Date("2025-12-30 00:00:00");
-  const volumes = expo(500, 1.3, 0.8); // base = 500, коэффициент = 1.3
+  const startTimegenerate = new Date("2024-01-04 00:00:00");
+  const endTimegenerate = new Date("2026-01-08 00:00:00");
+  const volumes = expo(500, 1.2, 1); // base = 500, коэффициент = 1.3
+  const addPercents = expo(0.01, 1.55, 3.7);
+
+  /* 
+  const volumes = expo(500, 1.2, 1); // base = 500, коэффициент = 1.3
+  const addPercents = expo(0.01, 1.5, 3.5);
+   */
   const [
     VOLUME1,
     VOLUME2,
@@ -71,15 +77,16 @@ async function runAll() {
     VOLUME5,
   ] = volumes;
   const volumessum = (VOLUME1 + VOLUME2 + VOLUME3 + VOLUME4 + VOLUME5)
-  const addPercents = expo(0.02, 1.2, 1.5);
   const [
     ADD_PERCENT,
     THIRD_ADD_PERCENT,
     FOURTH_ADD_PERCENT,
     FIFTH_ADD_PERCENT
   ] = addPercents;
-  const MIN_DROP_PERCENT2 =  1.5;
-  const LOOKBACK_HOURS2 = 3;
+  const MIN_DROP_PERCENT2 =  0.5;
+  const MAX_DROP_PERCENT2 =  1.8;
+  const LOOKBACK_HOURS2 = 2;
+  const takeprofit = 0.01;
   const config = {
     START_BALANCE: 0, 
     SPREAD: 3,
@@ -88,13 +95,14 @@ async function runAll() {
     VOLUME3,
     VOLUME4,
     VOLUME5,
-    TP_PERCENT: 0.01,   // +1%
+    TP_PERCENT: takeprofit,   // +1%
     ADD_PERCENT,
     THIRD_ADD_PERCENT,  
     FOURTH_ADD_PERCENT,
     FIFTH_ADD_PERCENT,
     LOOKBACK_HOURS: LOOKBACK_HOURS2,
     MIN_DROP_PERCENT1: MIN_DROP_PERCENT2,
+    MAX_DROP_PERCENT1: MAX_DROP_PERCENT2,
     volumessum: volumessum,
     //TP_PIPS: 110,
     //SL_PIPS: 50,
@@ -105,19 +113,17 @@ async function runAll() {
    //ALLOWED_PHASES: ["BULL","BEAR"]
    //ALLOWED_PHASES: ["BULL"]
   };
-  console.log(`${startTimegenerate.toISOString().split('T')[0]} ${endTimegenerate.toISOString().split('T')[0]}\n^^^^^^^^^^^^^^^^^^^^\n✔ Volumes:${volumes}\nSum: ${volumessum}\nPercents: ${addPercents}\n${LOOKBACK_HOURS2} hours Drop Percents: ${MIN_DROP_PERCENT2}\n^^^^^^^^^^^^^^^^^^^^\n`)
+  console.log(`\n^^^^^^^^^^^^^^^^^^^^\n${startTimegenerate.toISOString().split('T')[0]} ${endTimegenerate.toISOString().split('T')[0]}\nVolumes:${volumes}\nSum: ${volumessum}\nTake: ${takeprofit}\nPercents: ${addPercents}\n${LOOKBACK_HOURS2} hours Drop Percents: min ${MIN_DROP_PERCENT2}, max ${MAX_DROP_PERCENT2}\n^^^^^^^^^^^^^^^^^^^^\n`)
  generateTrades(startTimegenerate, endTimegenerate, config); await new Promise(resolve => setTimeout(resolve, 4000)); await runpyVisual();
-  
 } 
-
 //runAll(); 
 
 
 setTimeout(() => {   
-  const startTime = "2025-04-07 00:00:00";  
-  const endTime = "2025-04-08 00:00:00"; 
+  const startTime = "2024-01-03 00:00:00";  
+  const endTime = "2027-05-11 00:00:00"; 
   const datapath = "./backtest/ETHUSDT_5m.csv"; 
   const runGeneration = require('./visualization/generation.js');
   runGeneration(startTime, endTime, datapath, sma1, sma2, sma3);
-}, 100);  
+}, 7000);  
 
