@@ -21,6 +21,7 @@ const runMorningQuintupleLongStrategy = async (candles, config) => {
     THIRD_ADD_PERCENT,
     FOURTH_ADD_PERCENT,
     FIFTH_ADD_PERCENT,
+    MIN_MINUTES_BETWEEN_FIRST_AND_THIRD,
     LOOKBACK_HOURS,
     MIN_DROP_PERCENT1,
     MAX_DROP_PERCENT1,
@@ -81,17 +82,30 @@ const runMorningQuintupleLongStrategy = async (candles, config) => {
     const candle = candles[i];
     const [datePart, timePart] = candle.time.split(" ");
 
+    // === ФИЛЬТР ПО ДНЯМ НЕДЕЛИ ===
+    const dateObj = new Date(candle.time);
+    const day = dateObj.getDay();
+    //if (day === 6) continue; // ❌ выходные 
+    // 0 = воскресенье, 6 = суббота
+
 
 
     const [hh, mm] = timePart.split(":");
-
-    if (mm !== "00") continue;
+    if (mm !== "00" && mm !== "30") continue;
+    if (hh === "02") continue;
     if (hh === "13") continue;
     if (hh === "14") continue;
     if (hh === "17") continue;
+    if (hh === "18") continue;
+    if (hh === "19") continue;
     if (hh === "20") continue;
     if (hh === "21") continue;
     if (hh === "22") continue;
+    if (hh === "23") continue;
+
+
+
+
     
 
     if (nextAllowedEntryTime && candle.time < nextAllowedEntryTime) {
@@ -128,6 +142,9 @@ const runMorningQuintupleLongStrategy = async (candles, config) => {
     let exitIndex = null;
     let finalTakeProfit = null;
     let lastEntryCandleIndex = null;
+
+    let exitReason = "TAKE";
+
 
     // ===== ПОИСК СОБЫТИЙ =====
     for (let j = i + 1; j < candles.length; j++) {
@@ -166,11 +183,10 @@ const runMorningQuintupleLongStrategy = async (candles, config) => {
           entryWithSpread3 = entryPrice3 + SPREAD / 2;
           lastEntryCandleIndex = j;
         }
-
+        // === 4-Я ===
         if (thirdOpened) {
           const addPrice4 = entryPrice3 * (1 - FOURTH_ADD_PERCENT);
 
-          // === 4-Я ===
           if (!fourthOpened && c.low <= addPrice4) {
             fourthOpened = true;
             entryPrice4 = addPrice4;
@@ -179,12 +195,35 @@ const runMorningQuintupleLongStrategy = async (candles, config) => {
             lastEntryCandleIndex = j;
           }
         }
-        
+
+        // === 5-Я ===      
         if (fourthOpened) {
           const addPrice5 = entryPrice4 * (1 - FIFTH_ADD_PERCENT);
 
-          // === 5-Я ===
+
           if (!fifthOpened && c.low <= addPrice5) {
+
+            
+            const t3 = new Date(entryTime4).getTime();
+            const tNow = new Date(c.time).getTime();
+
+            const minutesBetween3and4 = (tNow - t3) / (1000 * 60);
+
+            if (
+              minutesBetween3and4 > 0 &&
+              minutesBetween3and4 < MIN_MINUTES_BETWEEN_FIRST_AND_THIRD
+            ) {
+              // ❌ СЛИШКОМ БЫСТРО → ЗАКРЫВАЕМ 1,2,3
+              exitPrice = c.low;
+              exitTime = c.time;
+              exitIndex = j;
+              finalTakeProfit = tp1;
+              exitReason = "STOP";
+              break;
+            }
+
+
+
             fifthOpened = true;
             entryPrice5 = addPrice5;
             entryTime5 = c.time;
@@ -245,7 +284,7 @@ const runMorningQuintupleLongStrategy = async (candles, config) => {
       exitPriceWithSpread: exitWithSpread,
       direction: "LONG",
       phase: "GRID",
-      result: "TAKE",
+      result: exitReason,
       volume: VOLUME1,
       profitQuoted: profit(exitWithSpread, entryWithSpread1, VOLUME1),
       spreadUsed: SPREAD,
@@ -264,7 +303,7 @@ const runMorningQuintupleLongStrategy = async (candles, config) => {
         exitPriceWithSpread: exitWithSpread,
         direction: "LONG",
         phase: "GRID",
-        result: "TAKE",
+        result: exitReason,
         volume: VOLUME2,
         profitQuoted: profit(exitWithSpread, entryWithSpread2, VOLUME2),
         spreadUsed: SPREAD,
@@ -283,7 +322,7 @@ const runMorningQuintupleLongStrategy = async (candles, config) => {
         exitPriceWithSpread: exitWithSpread,
         direction: "LONG",
         phase: "GRID",
-        result: "TAKE",
+        result: exitReason,
         volume: VOLUME3,
         profitQuoted: profit(exitWithSpread, entryWithSpread3, VOLUME3),
         spreadUsed: SPREAD,
@@ -302,7 +341,7 @@ const runMorningQuintupleLongStrategy = async (candles, config) => {
         exitPriceWithSpread: exitWithSpread,
         direction: "LONG",
         phase: "GRID",
-        result: "TAKE",
+        result: exitReason,
         volume: VOLUME4,
         profitQuoted: profit(exitWithSpread, entryWithSpread4, VOLUME4),
         spreadUsed: SPREAD,

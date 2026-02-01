@@ -61,6 +61,46 @@ plt.title(
     pad=20
 )
 
+# ======================================================
+# === СРЕДНЕЕ ВРЕМЯ В СДЕЛКЕ (ТОЛЬКО positionNumber = 1)
+# ======================================================
+
+durations_seconds = []
+
+for trade in trades:
+    if trade.get("positionNumber") != 1:
+        continue
+
+    entry_time = trade.get("entryTime")
+    exit_time = trade.get("exitTime")
+
+    if not entry_time or not exit_time:
+        continue
+
+    try:
+        entry_dt = datetime.strptime(entry_time, "%Y-%m-%d %H:%M:%S")
+        exit_dt = datetime.strptime(exit_time, "%Y-%m-%d %H:%M:%S")
+        duration = (exit_dt - entry_dt).total_seconds()
+
+        if duration > 0:
+            durations_seconds.append(duration)
+    except Exception as e:
+        print(f"Ошибка расчёта времени сделки: {e}")
+
+# === Среднее время ===
+if durations_seconds:
+    avg_seconds = sum(durations_seconds) / len(durations_seconds)
+
+    hours = int(avg_seconds // 3600)
+    minutes = int((avg_seconds % 3600) // 60)
+
+    avg_trade_duration_display = f"{hours} ч {minutes} мин"
+else:
+    avg_trade_duration_display = "N/A"
+
+
+
+
 # === Пары ключ-значение ===
 info_lines = [
     ("Всего дней в данных", stats["totalDaysInData"]),
@@ -74,11 +114,12 @@ info_lines = [
     ("Ср. сделок в день", stats["averageTradesPerDay"]),
     ("LONG-сделок", stats["longTrades"]),
     ("SHORT-сделок", stats["shortTrades"]),
-#    ("Стартовый баланс", stats["startBalance"]),
-#    ("Финальный баланс", stats["finalBalance"]),
     ("Общий профит", total_profit),
     ("Объём сделки (volumessum)", trade_volume_sum),
     ("Профит / объём сделки", profit_to_volume_ratio_display),
+
+    # 🔥 НОВАЯ СТРОКА
+    ("Среднее время в сделке (position 1)", avg_trade_duration_display),
 ]
 
 # === Цвета и стили ===
