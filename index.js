@@ -32,7 +32,21 @@ function runMT5() {
 })();
 */
 //require('./runpy.js');
+const http = require("http");
 
+const PORT = process.env.PORT || 3000;
+
+http.createServer((req, res) => {
+  if (req.url === "/health") {
+    res.writeHead(200);
+    res.end("OK");
+  } else {
+    res.writeHead(404);
+    res.end();
+  }
+}).listen(PORT, () => {
+  console.log(`🌐 Health server listening on port ${PORT}`);
+});
 require("dotenv").config();   // 🔥 ПЕРВАЯ СТРОКА
 
 //require("./bybit/ws/node.js");
