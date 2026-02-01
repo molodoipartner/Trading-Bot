@@ -151,16 +151,16 @@ async function runAll() {
    //ALLOWED_PHASES: ["BULL"]
   };
   console.log(`\n^^^^^^^^^^^^^^^^^^^^\n${startTimegenerate.toISOString().split('T')[0]} ${endTimegenerate.toISOString().split('T')[0]}\nVolumes:${volumes}\nSum: ${volumessum}\nTake: ${takeprofit}\nPercents: ${addPercents}\n${LOOKBACK_HOURS2} hours Drop Percents: min ${MIN_DROP_PERCENT2}, max ${MAX_DROP_PERCENT2}\n^^^^^^^^^^^^^^^^^^^^\n`)
- //generateTrades(startTimegenerate, endTimegenerate, config); await new Promise(resolve => setTimeout(resolve, 4000)); await runpyVisual();
+ generateTrades(startTimegenerate, endTimegenerate, config); await new Promise(resolve => setTimeout(resolve, 4000)); await runpyVisual();
 } 
 //runAll(); 
 
 
 setTimeout(() => {   
-  const startTime = "2023-12-03 00:00:00";  
-  const endTime = "2026-02-20 00:00:00"; 
+  const startTime = "2024-07-10 00:00:00";  
+  const endTime = "2024-07-15 00:00:00"; 
   const datapath = "./backtest/ETHUSDT_5m.csv"; 
   const runGeneration = require('./visualization/generation.js');
   //runGeneration(startTime, endTime, datapath, sma1, sma2, sma3);
-}, 7000);  
+}, 700);  
 

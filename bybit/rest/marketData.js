@@ -11,7 +11,7 @@ async function getLastTwoHoursMoveETH() {
     category: "linear",
     symbol: "ETHUSDT",
     interval: "5",
-    limit: 12 * 12,
+    limit: 2 * 12,
   });
 
   // Bybit возвращает свечи от новой к старой → разворачиваем

@@ -5,10 +5,10 @@ async function openIsolatedLongLimit({
   qty,
   price,
   leverage,
-  takeProfit
+  takeProfit // может быть undefined
 }) {
 
-  // ---------- SET LEVERAGE (SAFE, UTA OK) ----------
+  // ---------- SET LEVERAGE ----------
   try {
     await privateRequest("POST", "/v5/position/set-leverage", {
       category: "linear",
@@ -23,21 +23,31 @@ async function openIsolatedLongLimit({
     console.log("ℹ️ Leverage already set");
   }
 
-  // ❌ switch-isolated — УДАЛЯЕМ
-
-  // ---------- PLACE ORDER ----------
-  const res = await privateRequest("POST", "/v5/order/create", {
+  // ---------- BUILD ORDER PAYLOAD ----------
+  const orderPayload = {
     category: "linear",
     symbol,
     side: "Buy",
     orderType: "Limit",
-    takeProfit: takeProfit.toString(),
     qty: qty.toString(),
     price: price.toString(),
     timeInForce: "GTC",
     reduceOnly: false,
     closeOnTrigger: false,
-  });
+  };
+
+  // ✅ ДОБАВЛЯЕМ TP ТОЛЬКО ЕСЛИ ОН ЕСТЬ
+  if (typeof takeProfit === "number" && takeProfit > 0) {
+    orderPayload.takeProfit = takeProfit.toString();
+    orderPayload.tpTriggerBy = "LastPrice";
+  }
+
+  // ---------- PLACE ORDER ----------
+  const res = await privateRequest(
+    "POST",
+    "/v5/order/create",
+    orderPayload
+  );
 
   return res.result;
 }

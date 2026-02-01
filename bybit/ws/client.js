@@ -1,3 +1,4 @@
+// ws/client.js
 const WebSocket = require("ws");
 const crypto = require("crypto");
 
@@ -9,10 +10,17 @@ const WS_URL = "wss://stream.bybit.com/v5/private";
 
 // ======================================
 class BybitWSClient {
-  constructor({ onPositionOpen, onPositionClose } = {}) {
+  constructor({
+    onPositionOpen,
+    onPositionClose,
+    onExecution,
+  } = {}) {
     this.ws = null;
+
     this.onPositionOpen = onPositionOpen;
     this.onPositionClose = onPositionClose;
+    this.onExecution = onExecution;
+
     this.isInPosition = false;
   }
   
@@ -158,41 +166,45 @@ class BybitWSClient {
         side: e.side,
         qty: e.execQty,
         price: e.execPrice,
-        orderId: e.orderId
       });
+
+      this.onExecution?.(e);
     });
   }
+
 
   handlePosition(positions) {
     positions.forEach(p => {
       const size = Number(p.size);
 
-      // 📈 позиция открылась
+      // 📈 первый вход
       if (size > 0 && !this.isInPosition) {
         this.isInPosition = true;
 
         console.log("📈 POSITION OPENED:", {
           symbol: p.symbol,
           size: p.size,
-          entryPrice: p.entryPrice
+          entryPrice: p.entryPrice,
         });
 
         this.onPositionOpen?.(p);
+        return;
       }
 
-      // 📉 позиция закрылась
+      // 📉 закрытие позиции
       if (size === 0 && this.isInPosition) {
         this.isInPosition = false;
 
         console.log("🏁 POSITION CLOSED:", {
           symbol: p.symbol,
-          side: p.side
         });
 
         this.onPositionClose?.(p);
       }
     });
   }
+
+
 
 }
 
