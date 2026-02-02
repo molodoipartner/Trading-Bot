@@ -147,7 +147,7 @@ async function checkEthStrategy() {
       const MIN_QTY = 0.01;
       const QTY_STEP = 0.01;
       // ---------- MARKET ORDER WITH LEVERAGE ----------
-    
+
       const volumeUSDT0 = STRATEGY_CONFIG.volumes[0];
       const positionValueUSDT0 = volumeUSDT0 * leverage;
       let qtyETH0 = positionValueUSDT0 / result.endPrice;
@@ -170,7 +170,7 @@ async function checkEthStrategy() {
         leverage: STRATEGY_CONFIG.order.leverage,
         takeProfit: takeProfitPrice,
       });
-     
+
       // ---------- LIMIT ORDER 1 WITH LEVERAGE ----------
       const price = Number(
         (result.endPrice - (result.endPrice * STRATEGY_CONFIG.addPercents[0])).toFixed(2)

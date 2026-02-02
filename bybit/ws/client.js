@@ -22,8 +22,15 @@ class BybitWSClient {
     this.onExecution = onExecution;
 
     this.isInPosition = false;
+
+    // ⭐ reconnect control
+    this.reconnectDelay = 2000;
+    this.maxReconnectDelay = 30000;
+
+    this.pingInterval = null;
+    this.reconnectTimeout = null;
   }
-  
+
   // ---------- CONNECT ----------
   connect() {
     console.log("🔌 Connecting to Bybit Private WS...");
@@ -44,11 +51,42 @@ class BybitWSClient {
       console.error("❌ WS error:", err.message);
     });
 
-    this.ws.on("close", () => {
-      console.warn("⚠️ WS closed");
+    // ⭐ CLOSE — ЕДИНСТВЕННОЕ МЕСТО
+    this.ws.on("close", (code, reason) => {
+      console.warn("⚠️ WS closed", {
+        code,
+        reason: reason?.toString()
+      });
+
+      this.cleanup();
+      this.scheduleReconnect();
     });
   }
-  
+
+  // ---------- CLEANUP ----------
+  cleanup() {
+    if (this.pingInterval) {
+      clearInterval(this.pingInterval);
+      this.pingInterval = null;
+    }
+  }
+
+  // ---------- RECONNECT ----------
+  scheduleReconnect() {
+    if (this.reconnectTimeout) return;
+
+    console.log(`🔁 Reconnecting in ${this.reconnectDelay / 1000}s...`);
+
+    this.reconnectTimeout = setTimeout(() => {
+      this.reconnectTimeout = null;
+      this.connect();
+      this.reconnectDelay = Math.min(
+        this.reconnectDelay * 2,
+        this.maxReconnectDelay
+      );
+    }, this.reconnectDelay);
+  }
+
   // ---------- AUTH ----------
   authenticate() {
     const expires = Date.now() + 10_000;
@@ -88,6 +126,9 @@ class BybitWSClient {
       console.log("🔓 Auth success");
       this.startPing();
       this.subscribe();
+
+      // ⭐ успешное соединение → сбрасываем backoff
+      this.reconnectDelay = 2000;
       return;
     }
 
@@ -102,33 +143,23 @@ class BybitWSClient {
       return;
     }
 
-    // ORDER EVENTS
     if (msg.topic === "order") {
       this.handleOrder(msg.data);
       return;
     }
 
-    // EXECUTION EVENTS (REAL TRADES)
     if (msg.topic === "execution") {
       this.handleExecution(msg.data);
       return;
     }
 
-    // POSITION EVENTS
     if (msg.topic === "position") {
       this.handlePosition(msg.data);
       return;
     }
-
-    this.ws.on("close", () => {
-      console.warn("⚠️ WS closed");
-      if (this.pingInterval) {
-        clearInterval(this.pingInterval);
-        this.pingInterval = null;
-      }
-    });
   }
 
+  // ---------- PING ----------
   startPing() {
     this.pingInterval = setInterval(() => {
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
@@ -137,7 +168,6 @@ class BybitWSClient {
       }
     }, 20_000);
   }
-
 
   // ---------- HANDLERS ----------
 
@@ -172,41 +202,24 @@ class BybitWSClient {
     });
   }
 
-
   handlePosition(positions) {
     positions.forEach(p => {
       const size = Number(p.size);
 
-      // 📈 первый вход
       if (size > 0 && !this.isInPosition) {
         this.isInPosition = true;
-
-        console.log("📈 POSITION OPENED:", {
-          symbol: p.symbol,
-          size: p.size,
-          entryPrice: p.entryPrice,
-        });
-
+        console.log("📈 POSITION OPENED:", p.symbol);
         this.onPositionOpen?.(p);
         return;
       }
 
-      // 📉 закрытие позиции
       if (size === 0 && this.isInPosition) {
         this.isInPosition = false;
-
-        console.log("🏁 POSITION CLOSED:", {
-          symbol: p.symbol,
-        });
-
+        console.log("🏁 POSITION CLOSED:", p.symbol);
         this.onPositionClose?.(p);
       }
     });
   }
-
-
-
 }
 
-// ---------- EXPORT ----------
 module.exports = { BybitWSClient };
