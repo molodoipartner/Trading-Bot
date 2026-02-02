@@ -361,7 +361,7 @@ async function updateTakeProfitFromPosition(position) {
 
   if (!Number(size)) return;
 
-  const tp = calcTakeProfit(Number(avgPrice), 1);
+  const tp = calcTakeProfit(Number(avgPrice), STRATEGY_CONFIG.order.takeProfitPercent);
 
   console.log("🎯 Updating TP:", {
     avgPrice,
