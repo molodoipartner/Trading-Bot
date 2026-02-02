@@ -11,7 +11,7 @@
 const runMorningQuintupleLongStrategy = async (candles, config) => {
   const {
     SPREAD,
-    VOLUME1,
+    VOLUME1, 
     VOLUME2,
     VOLUME3,
     VOLUME4,
@@ -41,40 +41,115 @@ const runMorningQuintupleLongStrategy = async (candles, config) => {
     return date.toISOString().slice(0, 16).replace("T", " ");
   };
 
+
+
+  
   const isPriceChangeInRange = (candles, currentIndex) => {
-    if (currentIndex < LOOKBACK_HOURS) return false;
+    if (currentIndex < LOOKBACK_HOURS + 1) return false;
 
     const minPercent = MIN_DROP_PERCENT1;
     const maxPercent = MAX_DROP_PERCENT1;
 
-    // 🚫 Если оба 0 — фильтр отключён
     if (minPercent === 0 && maxPercent === 0) return true;
 
-    const slice = candles.slice(
-      currentIndex - LOOKBACK_HOURS,
-      currentIndex
+    const fromIndex = currentIndex - LOOKBACK_HOURS - 1;
+    const toIndex = currentIndex - 1;
+
+    const slice = candles.slice(fromIndex, toIndex);
+
+    const startCandle = slice[0];
+    const finishCandle = slice[1];
+
+    const changePercent =
+      ((startCandle.open - finishCandle.low) / startCandle.open) * 100;
+
+    console.log(
+      `📉 Диапазон: ${startCandle.open} → ${finishCandle.low} | ` +
+      `Падение: ${changePercent.toFixed(2)}%`
     );
-
-    const startPrice = slice[0].open;
-
-    let changePercent;
-
-    // 📉 ПАДЕНИЕ
-    if (minPercent > 0 || maxPercent > 0) {
-      const minLow = Math.min(...slice.map(c => c.low));
-      changePercent = ((startPrice - minLow) / startPrice) * 100;
-    } 
-    // 📈 РОСТ
-    else {
-      const maxHigh = Math.max(...slice.map(c => c.high));
-      changePercent = ((maxHigh - startPrice) / startPrice) * 100;
-    }
 
     const absMin = Math.abs(minPercent);
     const absMax = Math.abs(maxPercent);
 
     return changePercent >= absMin && changePercent <= absMax;
   };
+
+
+/* 
+
+
+const isPriceChangeInRange = (candles, signalIndex) => {
+  const minPercent = MIN_DROP_PERCENT1;
+  const maxPercent = MAX_DROP_PERCENT1;
+
+  if (minPercent === 0 && maxPercent === 0) return true;
+
+  const executionIndex = signalIndex - 1;
+  if (executionIndex < 0) return false;
+
+  const executionCandle = candles[executionIndex];
+
+  const executionTime = new Date(
+    executionCandle.time || executionCandle.timestamp
+  ).getTime();
+
+  const TWO_HOURS_MS = 2 * 5 * 60 * 1000;
+  const targetTime = executionTime - TWO_HOURS_MS;
+
+  // 🔍 ищем свечу ≈ 2 часа назад
+  let startCandle = null;
+
+  for (let i = executionIndex - 1; i >= 0; i--) {
+    const t = new Date(
+      candles[i].time || candles[i].timestamp
+    ).getTime();
+
+    if (t <= targetTime) {
+      startCandle = candles[i];
+      break;
+    }
+  }
+
+  if (!startCandle) return false;
+
+  // 🎯 ЦЕНЫ (ТОЛЬКО ЗАКРЫТЫЕ!)
+  const startPrice = startCandle.open;        // open 2 часа назад
+  const endPrice = executionCandle.close;     // close 17:25
+
+  const changePercent =
+    ((endPrice - startPrice) / startPrice) * 100;
+
+  // 🧾 ЛОГ
+  /*
+  console.log("📊 Проверка диапазона (БЕЗ ЗАГЛЯДЫВАНИЯ)");
+  console.log(
+    "🕒 Старт:",
+    startPrice,
+    "| open:",
+    startCandle.time
+  );
+  console.log(
+    "🕔 Конец:",
+    endPrice,
+    "| close:",
+    executionCandle.time
+  );
+  console.log(
+    "📐 Изменение:",
+    changePercent.toFixed(2) + "%"
+  );
+  console.log("— — — — — — — — — — —");
+
+  const absMin = Math.abs(minPercent);
+  const absMax = Math.abs(maxPercent);
+
+  return (
+    Math.abs(changePercent) >= absMin &&
+    Math.abs(changePercent) <= absMax
+  );
+};
+
+*/
 
 
 
@@ -91,7 +166,7 @@ const runMorningQuintupleLongStrategy = async (candles, config) => {
 
 
     const [hh, mm] = timePart.split(":");
-    if (mm !== "00" && mm !== "30") continue;
+    if (mm !== "05" && mm !== "35") continue;
     if (hh === "02") continue;
     if (hh === "13") continue;
     if (hh === "14") continue;
@@ -106,6 +181,7 @@ const runMorningQuintupleLongStrategy = async (candles, config) => {
 
 
 
+
     
 
     if (nextAllowedEntryTime && candle.time < nextAllowedEntryTime) {
@@ -115,13 +191,20 @@ const runMorningQuintupleLongStrategy = async (candles, config) => {
     if (!isPriceChangeInRange(candles, i)) {
       continue;
     }
-
+;
 
     usedDates.add(datePart);
 
     // ===== 1-Я ПОЗИЦИЯ =====
-    const entryTime1 = candle.time;
-    const entryPrice1 = candle.close;
+    const signalCandle = candles[i];      // 17:30
+    const executionCandle = candles[i-1]; // 17:25 (уже закрыта)
+
+    if (!executionCandle) continue;
+
+    const entryTime1 = signalCandle.time;     // 17:30 — время решения
+    const entryPrice1 = executionCandle.close; // ✅ close 17:25
+
+
     const entryWithSpread1 = entryPrice1 + SPREAD / 2;
 
     const addPrice2 = entryPrice1 * (1 - ADD_PERCENT);

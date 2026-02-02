@@ -47,6 +47,7 @@ http.createServer((req, res) => {
 }).listen(PORT, () => {
   console.log(`🌐 Health server listening on port ${PORT}`);
 });
+
 require("dotenv").config();   // 🔥 ПЕРВАЯ СТРОКА
 
 //require("./bybit/ws/node.js");
@@ -79,45 +80,15 @@ async function runAll() {
   // generateSMA(sma3);
 
   await new Promise(resolve => setTimeout(resolve, 1000));
-  const startTimegenerate = new Date("2023-02-20 00:00:00");
-  const endTimegenerate = new Date("2026-02-08 00:00:00");
+  const startTimegenerate = new Date("2026-02-02 02:00:00");
+  const endTimegenerate = new Date("2026-03-02 00:00:00");
 
   
-    const volumes = expo(500, 1.16, 1);
-  const addPercents = expo(0.01, 1.55, 3.9);
+const volumes = expo(500, 1.16, 1);
+const addPercents = expo(0.01, 1.55, 3.9);
 
 
   /* 
-
-    if (hh === "02") continue;
-    if (hh === "13") continue;
-    if (hh === "14") continue;
-    if (hh === "17") continue;
-    if (hh === "18") continue;
-    if (hh === "19") continue;
-    if (hh === "20") continue;
-    if (hh === "21") continue;
-    if (hh === "22") continue;
-    if (hh === "23") continue;
-    const volumes = expo(500, 1.19, 0.8);
-  const addPercents = expo(0.01, 1.55, 3.9);
-  const MIN_DROP_PERCENT2 =  0.52;
-  const MAX_DROP_PERCENT2 =  2.5;
-  const LOOKBACK_HOURS2 = 2;
-  const takeprofit = 0.011;
-  
-
-
-
-  const volumes = expo(500, 1.19, 0.8);
-  const addPercents = expo(0.011, 1.50, 3.9);
-
-
-    const volumes = expo(500, 1.19, 0.8);
-  const addPercents = expo(0.01, 1.55, 3.9);
-
-  const volumes = expo(500, 1.2, 1); // base = 500, коэффициент = 1.3
-  const addPercents = expo(0.01, 1.5, 3.5);
    */
   const [
     VOLUME1,
@@ -155,14 +126,7 @@ async function runAll() {
     MIN_DROP_PERCENT1: MIN_DROP_PERCENT2,
     MAX_DROP_PERCENT1: MAX_DROP_PERCENT2,
     volumessum: volumessum,
-    //TP_PIPS: 110,
-    //SL_PIPS: 50,
-    //ALLOWED_HOURS: [17], 
-    //smaPath1: `./backtest/indicator/sma${sma1}.csv`,
-    //smaPath2: `./backtest/indicator/sma${sma2}.csv`, 
-    //smaPath3: `./backtest/indicator/sma${sma3}.csv`,
-   //ALLOWED_PHASES: ["BULL","BEAR"]
-   //ALLOWED_PHASES: ["BULL"]
+
   };
   console.log(`\n^^^^^^^^^^^^^^^^^^^^\n${startTimegenerate.toISOString().split('T')[0]} ${endTimegenerate.toISOString().split('T')[0]}\nVolumes:${volumes}\nSum: ${volumessum}\nTake: ${takeprofit}\nPercents: ${addPercents}\n${LOOKBACK_HOURS2} hours Drop Percents: min ${MIN_DROP_PERCENT2}, max ${MAX_DROP_PERCENT2}\n^^^^^^^^^^^^^^^^^^^^\n`)
  generateTrades(startTimegenerate, endTimegenerate, config); await new Promise(resolve => setTimeout(resolve, 4000)); await runpyVisual();
@@ -171,10 +135,10 @@ async function runAll() {
 
 
 setTimeout(() => {   
-  const startTime = "2024-01-20 00:00:00";  
-  const endTime = "2026-01-23 00:00:00"; 
+  const startTime = "2026-02-02 00:00:00";  
+  const endTime = "2026-03-02 00:00:00"; 
   const datapath = "./backtest/ETHUSDT_5m.csv"; 
   const runGeneration = require('./visualization/generation.js');
   //runGeneration(startTime, endTime, datapath, sma1, sma2, sma3);
-}, 700);  
+}, 7000);  
 

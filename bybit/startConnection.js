@@ -1,5 +1,5 @@
 const { BybitWSClient } = require("./ws/client");
-const { getLastTwoHoursMoveETH } = require("./rest/marketData");
+const { getLastTwoCandlesMoveETH } = require("./rest/marketData");
 const { openIsolatedLongLimit } = require("./rest/order");
 const { openIsolatedLongMarket } = require("./rest/marketorder");
 const { syncServerTime } = require("./rest/client");
@@ -114,7 +114,7 @@ async function checkEthStrategy() {
   try {
     console.log("⏱ Checking ETH strategy...");
 
-    const result = await getLastTwoHoursMoveETH();
+    const result = await getLastTwoCandlesMoveETH();
     console.log("ETH 2h move data:", result);
     console.log(
       `ETH 2h move: ${result.percentChange.toFixed(2)}%`
@@ -296,11 +296,14 @@ function startStrategy() {
   if (strategyInterval) return;
 
   console.log("▶️ Strategy STARTED");
+
   strategyInterval = runEveryAligned(
-    30 * 60 * 1000,
-    checkEthStrategy
+    30 * 60 * 1000,   // 30 минут
+    checkEthStrategy,
+    5 * 60 * 1000    // ⏱ +5 минут сдвиг
   );
 }
+
 
 function stopStrategy() {
   if (!strategyInterval) return;
@@ -321,7 +324,7 @@ async function hasOpenPosition(symbol) {
   return position && Number(position.size) > 0;
 }
 
-function runEveryAligned(intervalMs, task) {
+function runEveryAligned(intervalMs, task, offsetMs = 0) {
   let stopped = false;
   let timeoutId = null;
 
@@ -329,7 +332,16 @@ function runEveryAligned(intervalMs, task) {
     if (stopped) return;
 
     const now = Date.now();
-    const nextTick = Math.ceil(now / intervalMs) * intervalMs;
+
+    // базовое выравнивание
+    let nextTick =
+      Math.ceil((now - offsetMs) / intervalMs) * intervalMs + offsetMs;
+
+    // защита: если вдруг попали в прошлое
+    if (nextTick <= now) {
+      nextTick += intervalMs;
+    }
+
     const delay = nextTick - now;
 
     timeoutId = setTimeout(async () => {
