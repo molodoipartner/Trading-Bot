@@ -1,12 +1,30 @@
 const { privateRequest } = require("./client");
 
-async function openIsolatedLongLimit({
+async function openLongLimit({
   symbol,
   qty,
   price,
   leverage,
-  takeProfit // может быть undefined
+  takeProfit,
+  marginMode = "isolated" // "isolated" | "cross"
 }) {
+
+  // ---------- SET MARGIN MODE ----------
+  try {
+    await privateRequest("POST", "/v5/position/switch-isolated", {
+      category: "linear",
+      symbol,
+      tradeMode: marginMode === "cross" ? 0 : 1,
+      buyLeverage: leverage.toString(),
+      sellLeverage: leverage.toString(),
+    });
+  } catch (e) {
+    // Bybit часто отвечает, что режим уже установлен
+    if (!e.message.includes("not modified")) {
+      throw e;
+    }
+    console.log("ℹ️ Margin mode already set");
+  }
 
   // ---------- SET LEVERAGE ----------
   try {
@@ -23,7 +41,7 @@ async function openIsolatedLongLimit({
     console.log("ℹ️ Leverage already set");
   }
 
-  // ---------- BUILD ORDER PAYLOAD ----------
+  // ---------- BUILD ORDER ----------
   const orderPayload = {
     category: "linear",
     symbol,
@@ -36,7 +54,6 @@ async function openIsolatedLongLimit({
     closeOnTrigger: false,
   };
 
-  // ✅ ДОБАВЛЯЕМ TP ТОЛЬКО ЕСЛИ ОН ЕСТЬ
   if (typeof takeProfit === "number" && takeProfit > 0) {
     orderPayload.takeProfit = takeProfit.toString();
     orderPayload.tpTriggerBy = "LastPrice";
@@ -53,5 +70,5 @@ async function openIsolatedLongLimit({
 }
 
 module.exports = {
-  openIsolatedLongLimit,
+  openLongLimit,
 };
