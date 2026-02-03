@@ -92,7 +92,7 @@ const addPercents = expo(0.01, 1.523, 4.19);
 
 /*
 1.5788
-  
+  1.5837
 const volumes = expo(500, 1.148, 1);
 const addPercents = expo(0.01, 1.523, 4.19);
 
@@ -114,7 +114,7 @@ const addPercents = expo(0.01, 1.523, 4.19);
     FOURTH_ADD_PERCENT,
     FIFTH_ADD_PERCENT
   ] = addPercents;
-  const MIN_DROP_PERCENT2 =  0.52;
+  const MIN_DROP_PERCENT2 =  0.505;
   const MAX_DROP_PERCENT2 =  3;
   const LOOKBACK_HOURS2 = 2;
   const takeprofit = 0.011;
@@ -145,7 +145,7 @@ const addPercents = expo(0.01, 1.523, 4.19);
 
 
 setTimeout(() => {    
-  const startTime = "2026-02-02 23:00:00";  
+  const startTime = "2024-02-02 23:00:00";  
   const endTime = "2026-03-02 13:00:00"; 
   const datapath = "./backtest/ETHUSDT_5m.csv"; 
   const runGeneration = require('./visualization/generation.js');
