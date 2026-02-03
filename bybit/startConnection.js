@@ -409,9 +409,9 @@ async function cancelAllOrders(symbol) {
   try {
     console.log("🚀 Starting bot...");
 
-/*  
+
     await syncServerTime();
-/*
+
     const wsClient = new BybitWSClient({
       onPositionOpen: () => {
         isInPosition = true;
@@ -460,7 +460,7 @@ async function cancelAllOrders(symbol) {
     wsClient.connect();
     await new Promise(r => setTimeout(r, 5500)); // fallback
 
-    /*
+  
     // 🔍 REST-проверка при старте
     isInPosition = await hasOpenPosition(STRATEGY_CONFIG.symbol);
     console.log("isInPosition (REST):", isInPosition);
@@ -471,7 +471,7 @@ async function cancelAllOrders(symbol) {
     } else {
       startStrategy();
     }
-*/
+
   } catch (e) {
     console.error("🔥 Startup error:", e.message);
   }
