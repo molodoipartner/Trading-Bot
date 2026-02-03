@@ -46,8 +46,8 @@ async function getLastTwoCandlesMoveETH() {
   // ❌ убираем текущую формирующуюся свечу
   const closedCandles = candles.slice(0, -1);
   // ✅ берём 2 последние закрытые
-  const startCandle  = closedCandles[1];
-  const finishCandle = closedCandles[2];
+  const startCandle  = closedCandles[0];
+  const finishCandle = closedCandles[1];
 
   if (!startCandle || !finishCandle) {
     throw new Error("Closed candles not found");
@@ -55,7 +55,7 @@ async function getLastTwoCandlesMoveETH() {
 
   const startPrice = startCandle.open;
   const finishPrice = finishCandle.low;
-  const endPrice = candles[3].close;
+  const endPrice = candles[2].close;
 
   const percentChange =
 (((startPrice - finishPrice) / startPrice) * 100) * -1; // -1 для отражения движения вниз

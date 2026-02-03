@@ -301,7 +301,7 @@ function startStrategy() {
   strategyInterval = runEveryAligned(
     30 * 60 * 1000,   // 30 минут
     checkEthStrategy,
-    5 * 60 * 1000    // ⏱ +5 минут сдвиг
+    301 * 1000    // ⏱ +5 минут сдвиг
   );
 }
 
