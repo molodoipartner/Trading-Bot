@@ -132,6 +132,7 @@ async function checkEthStrategy() {
     );
 
     if (p < low || p > high) {
+      console.log(`⛔ Move ${p.toFixed(2)}% out of range (${low}% .. ${high}%)`);
       console.log("❌ Strategy conditions not met");
       return;
     }
