@@ -61,7 +61,7 @@ const deposit = 550;
 const STRATEGY_CONFIG = {
   symbol: "ETHUSDT",
   DISABLED_HOURS: [2, 13, 14, 17, 18, 19, 20, 21, 22, 23], // часы по серверному времени
-
+          
   minPercent: -0.52,
   maxPercent: -3,
 

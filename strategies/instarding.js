@@ -44,35 +44,52 @@ const runMorningQuintupleLongStrategy = async (candles, config) => {
 
 
   
-  const isPriceChangeInRange = (candles, currentIndex) => {
-    if (currentIndex < LOOKBACK_HOURS + 1) return false;
+const isPriceChangeInRange = (candles, currentIndex) => {
+  if (currentIndex < LOOKBACK_HOURS + 1) return false;
 
-    const minPercent = MIN_DROP_PERCENT1;
-    const maxPercent = MAX_DROP_PERCENT1;
+  const minPercent = MIN_DROP_PERCENT1;
+  const maxPercent = MAX_DROP_PERCENT1;
 
-    if (minPercent === 0 && maxPercent === 0) return true;
+  if (minPercent === 0 && maxPercent === 0) return true;
 
-    const fromIndex = currentIndex - LOOKBACK_HOURS - 1;
-    const toIndex = currentIndex - 1;
+  const fromIndex = currentIndex - LOOKBACK_HOURS - 1;
+  const toIndex = currentIndex - 1;
 
-    const slice = candles.slice(fromIndex, toIndex);
+  const slice = candles.slice(fromIndex, toIndex);
 
-    const startCandle = slice[0];
-    const finishCandle = slice[1];
+  // 🔍 лог всех свечей, которые участвуют в проверке
 
-    const changePercent =
-      ((startCandle.open - finishCandle.low) / startCandle.open) * 100;
-
+  slice.forEach((candle, i) => {
     console.log(
-      `📉 Диапазон: ${startCandle.open} → ${finishCandle.low} | ` +
-      `Падение: ${changePercent.toFixed(2)}%`
+      `  [${fromIndex + i}] ${new Date(candle.time).toLocaleString()} | ` +
+      `O:${candle.open} H:${candle.high} L:${candle.low} C:${candle.close}`
     );
+  });
 
-    const absMin = Math.abs(minPercent);
-    const absMax = Math.abs(maxPercent);
+  const startCandle = slice[0];
+  const finishCandle = slice[1];
 
-    return changePercent >= absMin && changePercent <= absMax;
-  };
+  if (!startCandle || !finishCandle) {
+    console.warn("⚠️ Недостаточно свечей для расчёта");
+    return false;
+  }
+
+  const changePercent =
+    ((startCandle.open - finishCandle.low) / startCandle.open) * 100;
+
+  console.log(
+    `📉 Проверка движения:\n` +
+    `   🟢 Start candle: ${new Date(startCandle.time).toLocaleString()} | open = ${startCandle.open}\n` +
+    `   🔴 Finish candle: ${new Date(finishCandle.time).toLocaleString()} | low = ${finishCandle.low}\n` +
+    `   📊 Падение: ${changePercent.toFixed(2)}%`
+  );
+
+  const absMin = Math.abs(minPercent);
+  const absMax = Math.abs(maxPercent);
+
+  return changePercent >= absMin && changePercent <= absMax;
+};
+
 
 
 /* 

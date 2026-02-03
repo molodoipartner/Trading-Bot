@@ -80,8 +80,8 @@ async function runAll() {
   // generateSMA(sma3);
 
   await new Promise(resolve => setTimeout(resolve, 1000));
-  const startTimegenerate = new Date("2026-02-02 02:00:00");
-  const endTimegenerate = new Date("2026-03-02 00:00:00");
+  const startTimegenerate = new Date("2026-02-02 23:00:00");
+  const endTimegenerate = new Date("2026-03-02 10:00:00");
 
   
 const volumes = expo(500, 1.16, 1);
@@ -135,10 +135,10 @@ const addPercents = expo(0.01, 1.55, 3.9);
 
 
 setTimeout(() => {   
-  const startTime = "2026-02-02 00:00:00";  
-  const endTime = "2026-03-02 00:00:00"; 
+  const startTime = "2026-02-02 23:00:00";  
+  const endTime = "2026-03-02 10:00:00"; 
   const datapath = "./backtest/ETHUSDT_5m.csv"; 
   const runGeneration = require('./visualization/generation.js');
   //runGeneration(startTime, endTime, datapath, sma1, sma2, sma3);
-}, 7000);  
+}, 700);  
 
