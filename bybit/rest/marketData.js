@@ -55,7 +55,7 @@ async function getLastTwoCandlesMoveETH() {
 
   const startPrice = startCandle.open;
   const finishPrice = finishCandle.low;
-  const endPrice = closedCandles[3].close;
+  const endPrice = candles[3].close;
 
   const percentChange =
     ((startPrice - finishPrice) / startPrice) * 100;
