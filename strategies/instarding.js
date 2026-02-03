@@ -58,14 +58,14 @@ const isPriceChangeInRange = (candles, currentIndex) => {
   const slice = candles.slice(fromIndex, toIndex);
 
   // 🔍 лог всех свечей, которые участвуют в проверке
-
+  /*
   slice.forEach((candle, i) => {
     console.log(
       `[${fromIndex + i}] ${new Date(candle.time).toLocaleString()} | ` +
       `O:${candle.open} H:${candle.high} L:${candle.low} C:${candle.close}`
     );
   });
-
+  */
   const startCandle = slice[0];
   const finishCandle = slice[1];
 
@@ -185,6 +185,7 @@ const isPriceChangeInRange = (candles, signalIndex) => {
     const [hh, mm] = timePart.split(":");
     if (mm !== "05" && mm !== "35") continue;
     if (hh === "02") continue;
+
     if (hh === "13") continue;
     if (hh === "14") continue;
     if (hh === "17") continue;

@@ -82,8 +82,8 @@ const STRATEGY_CONFIG = {
     }
   },
 
-  volumes: expoVolumesFromTotal(deposit, 1.16, 1, 5),
-  addPercents: expoPercents(0.01, 1.55, 3.9, 5)
+  volumes: expoVolumesFromTotal(deposit, 1.148, 1, 5),
+  addPercents: expoPercents(0.01, 1.523, 4.19, 5)
 };
 
 console.log("Strategy:", STRATEGY_CONFIG);
