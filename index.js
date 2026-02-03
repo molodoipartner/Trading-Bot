@@ -32,6 +32,8 @@ function runMT5() {
 })();
 */
 //require('./runpy.js');
+
+
 const http = require("http");
 
 const PORT = process.env.PORT || 3000;
@@ -80,7 +82,7 @@ async function runAll() {
   // generateSMA(sma3);
 
   await new Promise(resolve => setTimeout(resolve, 1000));
-  const startTimegenerate = new Date("2024-01-02 23:00:00");
+  const startTimegenerate = new Date("2026-02-03 09:00:00");
   const endTimegenerate = new Date("2026-03-02 15:00:00");
 
   
@@ -91,6 +93,8 @@ const addPercents = expo(0.01, 1.523, 4.19);
 //
 
 /*
+0.01,0.031914,0.065288,0.116118,0.193531
+[ 0.01, 0.031914, 0.065288, 0.116118, 0.193531 ]
 1.5788
   1.5837
 const volumes = expo(500, 1.148, 1);
@@ -115,12 +119,13 @@ const addPercents = expo(0.01, 1.523, 4.19);
     FIFTH_ADD_PERCENT
   ] = addPercents;
   const MIN_DROP_PERCENT2 =  0.505;
-  const MAX_DROP_PERCENT2 =  3;
+  const MAX_DROP_PERCENT2 =  2;
+
   const LOOKBACK_HOURS2 = 2;
   const takeprofit = 0.011;
   const config = {
     START_BALANCE: 0, 
-    SPREAD: 3,
+    SPREAD: 0,
     VOLUME1,
     VOLUME2,
     VOLUME3,
@@ -145,7 +150,7 @@ const addPercents = expo(0.01, 1.523, 4.19);
 
 
 setTimeout(() => {    
-  const startTime = "2024-02-02 23:00:00";  
+  const startTime = "2026-02-03 00:00:00";  
   const endTime = "2026-03-02 13:00:00"; 
   const datapath = "./backtest/ETHUSDT_5m.csv"; 
   const runGeneration = require('./visualization/generation.js');

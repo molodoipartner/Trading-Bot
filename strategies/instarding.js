@@ -54,18 +54,19 @@ const isPriceChangeInRange = (candles, currentIndex) => {
 
   const fromIndex = currentIndex - LOOKBACK_HOURS - 1;
   const toIndex = currentIndex - 1;
+  //const toIndex = currentIndex;
 
   const slice = candles.slice(fromIndex, toIndex);
 
   // 🔍 лог всех свечей, которые участвуют в проверке
-  /*
+
   slice.forEach((candle, i) => {
     console.log(
       `[${fromIndex + i}] ${new Date(candle.time).toLocaleString()} | ` +
       `O:${candle.open} H:${candle.high} L:${candle.low} C:${candle.close}`
     );
   });
-  */
+
   const startCandle = slice[0];
   const finishCandle = slice[1];
 
@@ -76,14 +77,14 @@ const isPriceChangeInRange = (candles, currentIndex) => {
 
   const changePercent =
     ((startCandle.open - finishCandle.low) / startCandle.open) * 100;
-  /*
+
   console.log(
     `📉 Проверка движения:\n` +
     `   🟢 Start candle: ${new Date(startCandle.time).toLocaleString()} | open = ${startCandle.open}\n` +
     `   🔴 Finish candle: ${new Date(finishCandle.time).toLocaleString()} | low = ${finishCandle.low}\n` +
     `   📊 Падение: ${changePercent.toFixed(2)}%\n`
   );
-*/
+
   const absMin = Math.abs(minPercent);
   const absMax = Math.abs(maxPercent);
 
@@ -185,7 +186,6 @@ const isPriceChangeInRange = (candles, signalIndex) => {
     const [hh, mm] = timePart.split(":");
     if (mm !== "05" && mm !== "35") continue;
     if (hh === "02") continue;
-
     if (hh === "13") continue;
     if (hh === "14") continue;
     if (hh === "17") continue;

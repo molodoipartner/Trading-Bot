@@ -56,14 +56,14 @@ function expoPercents(
 }
 
 
-const deposit = 580;
+const deposit = 600;
 // ================= CONFIG =================
 const STRATEGY_CONFIG = {
   symbol: "ETHUSDT",
   DISABLED_HOURS: [2, 13, 14, 17, 18, 19, 20, 21, 22, 23], // часы по серверному времени
           
   minPercent: -0.505,
-  maxPercent: -3,
+  maxPercent: -2,
 
   order: {
     leverage: 4,
@@ -202,7 +202,7 @@ async function checkEthStrategy() {
  
       // ---------- LIMIT ORDER 2 WITH LEVERAGE ----------
       const price2 = Number(
-        (result.endPrice - (result.endPrice * STRATEGY_CONFIG.addPercents[1])).toFixed(2)
+        (price - (price * STRATEGY_CONFIG.addPercents[1])).toFixed(2)
       );
       const volumeUSDT2 = STRATEGY_CONFIG.volumes[2];
       const positionValueUSDT2 = volumeUSDT2 * leverage;
@@ -230,7 +230,7 @@ async function checkEthStrategy() {
     
       // ---------- LIMIT ORDER 3 WITH LEVERAGE ----------
       const price3 = Number(
-        (result.endPrice - (result.endPrice * STRATEGY_CONFIG.addPercents[2])).toFixed(2)
+        (price2 - (price2 * STRATEGY_CONFIG.addPercents[2])).toFixed(2)
       );
       const volumeUSDT3 = STRATEGY_CONFIG.volumes[3];
       const positionValueUSDT3 = volumeUSDT3 * leverage;
@@ -258,7 +258,7 @@ async function checkEthStrategy() {
 
       // ---------- LIMIT ORDER 4 WITH LEVERAGE ----------
       const price4 = Number(
-        (result.endPrice - (result.endPrice * STRATEGY_CONFIG.addPercents[3])).toFixed(2)
+        (price3 - (price3 * STRATEGY_CONFIG.addPercents[3])).toFixed(2)
       );
       const volumeUSDT4 = STRATEGY_CONFIG.volumes[4];
       const positionValueUSDT4 = volumeUSDT4 * leverage;
@@ -409,8 +409,9 @@ async function cancelAllOrders(symbol) {
   try {
     console.log("🚀 Starting bot...");
 
+/*  
     await syncServerTime();
-
+/*
     const wsClient = new BybitWSClient({
       onPositionOpen: () => {
         isInPosition = true;
@@ -459,7 +460,7 @@ async function cancelAllOrders(symbol) {
     wsClient.connect();
     await new Promise(r => setTimeout(r, 5500)); // fallback
 
-
+    /*
     // 🔍 REST-проверка при старте
     isInPosition = await hasOpenPosition(STRATEGY_CONFIG.symbol);
     console.log("isInPosition (REST):", isInPosition);
@@ -470,7 +471,7 @@ async function cancelAllOrders(symbol) {
     } else {
       startStrategy();
     }
-
+*/
   } catch (e) {
     console.error("🔥 Startup error:", e.message);
   }
