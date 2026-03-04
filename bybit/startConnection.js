@@ -56,7 +56,7 @@ function expoPercents(
 }
 
 
-const deposit = 600;
+const deposit = 670;
 // ================= CONFIG =================
 const STRATEGY_CONFIG = {
   symbol: "ETHUSDT",
@@ -66,23 +66,14 @@ const STRATEGY_CONFIG = {
   maxPercent: -2,
 
   order: {
-    leverage: 4,
+    leverage: 3.2,
     takeProfitPercent: 1.1,
   },
 
   deposit: deposit,
-  expo: {
-    volume: {
-      growth: 1.16,
-      scale: 1
-    },
-    percent: {
-      growth: 1.55,
-      scale: 3.9
-    }
-  },
 
-  volumes: expoVolumesFromTotal(deposit, 1.148, 1, 5),
+
+  volumes: expoVolumesFromTotal(deposit, 1.142, 1, 5),
   addPercents: expoPercents(0.01, 1.523, 4.19, 5)
 };
 

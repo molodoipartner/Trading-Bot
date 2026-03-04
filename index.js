@@ -82,23 +82,32 @@ async function runAll() {
   // generateSMA(sma3);
 
   await new Promise(resolve => setTimeout(resolve, 1000));
-  const startTimegenerate = new Date("2026-02-03 09:00:00");
-  const endTimegenerate = new Date("2026-03-02 15:00:00");
+  const startTimegenerate = new Date("2022-02-04 08:20:00");
+  const endTimegenerate = new Date("2027-02-06 13:00:00");
 
   
-const volumes = expo(500, 1.148, 1);
+const volumes = expo(500, 1.142, 1);
 const addPercents = expo(0.01, 1.523, 4.19);
 
 //0.116231 ,0.116091, 0.117135 0.115358, ,0.116118
 //
-
+//1.7265
 /*
-0.01,0.031914,0.065288,0.116118,0.193531
-[ 0.01, 0.031914, 0.065288, 0.116118, 0.193531 ]
-1.5788
-  1.5837
-const volumes = expo(500, 1.148, 1);
+const volumes = expo(500, 1.142, 1);
 const addPercents = expo(0.01, 1.523, 4.19);
+const volumes = expo(500, 1.16, 1);
+const addPercents = expo(0.01, 1.55, 3.9);
+  deposit: deposit,
+  expo: {
+    volume: {
+      growth: 1.16,
+      scale: 1
+    },
+    percent: {
+      growth: 1.55,
+      scale: 3.9
+    }
+  },
 
 
 */
@@ -150,8 +159,8 @@ const addPercents = expo(0.01, 1.523, 4.19);
 
 
 setTimeout(() => {    
-  const startTime = "2026-02-03 00:00:00";  
-  const endTime = "2026-03-02 13:00:00"; 
+  const startTime = "2024-02-04 08:20:00";  
+  const endTime = "2027-02-06 13:00:00"; 
   const datapath = "./backtest/ETHUSDT_5m.csv"; 
   const runGeneration = require('./visualization/generation.js');
   //runGeneration(startTime, endTime, datapath, sma1, sma2, sma3);
