@@ -56,7 +56,7 @@ function expoPercents(
 }
 
 
-const deposit = 670;
+const deposit = 685;
 // ================= CONFIG =================
 const STRATEGY_CONFIG = {
   symbol: "ETHUSDT",
