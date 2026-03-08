@@ -6,7 +6,8 @@ async function openIsolatedLongMarket({
   leverage,
   takeProfit,
 }) {
-  // SET LEVERAGE
+
+  // ---------- SET LEVERAGE ----------
   try {
     await privateRequest("POST", "/v5/position/set-leverage", {
       category: "linear",
@@ -18,7 +19,7 @@ async function openIsolatedLongMarket({
     if (!e.message?.includes("leverage not modified")) throw e;
   }
 
-  // BUILD ORDER (NO PRICE)
+  // ---------- MARKET ORDER ----------
   const orderPayload = {
     category: "linear",
     symbol,
@@ -29,14 +30,38 @@ async function openIsolatedLongMarket({
     closeOnTrigger: false,
   };
 
+  const orderResult = await privateRequest(
+    "POST",
+    "/v5/order/create",
+    orderPayload
+  );
+
+  console.log("✅ Market order opened");
+
+  // ---------- PLACE TAKE PROFIT LIMIT ----------
   if (typeof takeProfit === "number" && takeProfit > 0) {
-    orderPayload.takeProfit = takeProfit.toString();
-    orderPayload.tpTriggerBy = "LastPrice";
+
+    const tpPayload = {
+      category: "linear",
+      symbol,
+      side: "Sell",
+      orderType: "Limit",
+      qty: qty.toString(),
+      price: takeProfit.toString(),
+      reduceOnly: true,
+      timeInForce: "GoodTillCancel"
+    };
+
+    const tpResult = await privateRequest(
+      "POST",
+      "/v5/order/create",
+      tpPayload
+    );
+
+    console.log("🎯 Take Profit LIMIT placed:", tpResult.result);
   }
 
-  return (
-    await privateRequest("POST", "/v5/order/create", orderPayload)
-  ).result;
+  return orderResult.result;
 }
 
 module.exports = {
