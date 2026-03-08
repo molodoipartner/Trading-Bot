@@ -138,6 +138,11 @@ async function checkEthStrategy() {
       const leverage = STRATEGY_CONFIG.order.leverage;
       const MIN_QTY = 0.01;
       const QTY_STEP = 0.01;
+      function roundToStep(value, step) {
+        const precision = step.toString().split(".")[1]?.length || 0;
+        const rounded = Math.floor(value / step) * step;
+        return Number(rounded.toFixed(precision));
+      }
       // ---------- MARKET ORDER WITH LEVERAGE ----------
 
       const volumeUSDT0 = STRATEGY_CONFIG.volumes[0];
@@ -145,6 +150,7 @@ async function checkEthStrategy() {
       let qtyETH0 = positionValueUSDT0 / result.endPrice;
       const RawQtyETH0 = qtyETH0;
       qtyETH0 = Math.floor(qtyETH0 / QTY_STEP) * QTY_STEP;
+      qtyETH0 = roundToStep(qtyETH0, QTY_STEP);
       if (qtyETH0 < MIN_QTY) {
         console.log("⛔ qty below minOrderQty:", qtyETH0);
         return;
@@ -172,6 +178,7 @@ async function checkEthStrategy() {
       let qtyETH = positionValueUSDT / price;
       const RawQtyETH = qtyETH;
       qtyETH = Math.floor(qtyETH / QTY_STEP) * QTY_STEP;
+      qtyETH = roundToStep(qtyETH, QTY_STEP);
       if (qtyETH < MIN_QTY) {
         console.log("⛔ qty below minOrderQty:", qtyETH);
         return;
@@ -200,6 +207,7 @@ async function checkEthStrategy() {
       let qtyETH2 = positionValueUSDT2 / price2;
       const RawQtyETH2 = qtyETH2;
       qtyETH2 = Math.floor(qtyETH2 / QTY_STEP) * QTY_STEP;
+      qtyETH2 = roundToStep(qtyETH2, QTY_STEP);
       if (qtyETH2 < MIN_QTY) {
         console.log("⛔ qty below minOrderQty:", qtyETH2);
         return;
@@ -228,6 +236,7 @@ async function checkEthStrategy() {
       let qtyETH3 = positionValueUSDT3 / price3;
       const RawQtyETH3 = qtyETH3;
       qtyETH3 = Math.floor(qtyETH3 / QTY_STEP) * QTY_STEP;
+      qtyETH3 = roundToStep(qtyETH3, QTY_STEP);
       if (qtyETH3 < MIN_QTY) {
         console.log("⛔ qty below minOrderQty:", qtyETH3);
         return;
@@ -256,6 +265,7 @@ async function checkEthStrategy() {
       let qtyETH4 = positionValueUSDT4 / price4;
       const RawQtyETH4 = qtyETH4;
       qtyETH4 = Math.floor(qtyETH4 / QTY_STEP) * QTY_STEP;
+      qtyETH4 = roundToStep(qtyETH4, QTY_STEP);
       if (qtyETH4 < MIN_QTY) {
         console.log("⛔ qty below minOrderQty:", qtyETH4);
         return;
