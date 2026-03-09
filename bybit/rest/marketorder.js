@@ -20,25 +20,24 @@ async function openIsolatedLongMarket({
   }
 
   // ---------- MARKET ORDER ----------
-  const orderPayload = {
+  const marketPayload = {
     category: "linear",
     symbol,
     side: "Buy",
     orderType: "Market",
     qty: qty.toString(),
     reduceOnly: false,
-    closeOnTrigger: false,
   };
 
   const orderResult = await privateRequest(
     "POST",
     "/v5/order/create",
-    orderPayload
+    marketPayload
   );
 
   console.log("✅ Market order opened");
 
-  // ---------- PLACE TAKE PROFIT LIMIT ----------
+  // ---------- LIMIT TAKE PROFIT ----------
   if (typeof takeProfit === "number" && takeProfit > 0) {
 
     const tpPayload = {
@@ -48,8 +47,7 @@ async function openIsolatedLongMarket({
       orderType: "Limit",
       qty: qty.toString(),
       price: takeProfit.toString(),
-      reduceOnly: true,
-      timeInForce: "GoodTillCancel"
+      reduceOnly: true
     };
 
     const tpResult = await privateRequest(
