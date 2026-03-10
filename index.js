@@ -31,7 +31,7 @@ function runMT5() {
     }
 })();
 */
-//require('./runpy.js');
+///require('./runpy.js');
 
 
 const http = require("http");
@@ -56,6 +56,7 @@ require("dotenv").config();   // 🔥 ПЕРВАЯ СТРОКА
 
 //require("./bybit/ws/node.js");
 require("./bybit/startConnection.js");
+//require("./nigger.js");
 //require("./bybit/ws/check-sign.js");
 //require('./bybit/bybitconnectiontest.js');
 
@@ -84,8 +85,8 @@ async function runAll() {
   // generateSMA(sma3);
 
   await new Promise(resolve => setTimeout(resolve, 1000));
-  const startTimegenerate = new Date("2026-03-08 00:20:00");
-  const endTimegenerate = new Date("2027-02-06 13:00:00");
+  const startTimegenerate = new Date("2026-02-01 00:20:00");
+  const endTimegenerate = new Date("2026-03-09 13:00:00");
 
   
 const volumes = expo(500, 1.142, 1);
@@ -161,9 +162,9 @@ const addPercents = expo(0.01, 1.55, 3.9);
 
 
 setTimeout(() => {    
-  const startTime = "2026-03-08 00:20:00";  
-  const endTime = "2027-02-06 13:00:00"; 
-  const datapath = "./backtest/ETHUSDT_5m.csv"; 
+  const startTime = "2023-03-10 00:20:00";  
+  const endTime = "2027-03-09 13:00:00"; 
+  const datapath = "./backtest/XAU_5m_data.csv"; 
   const runGeneration = require('./visualization/generation.js');
   //runGeneration(startTime, endTime, datapath, sma1, sma2, sma3);
 }, 700);  
