@@ -85,8 +85,8 @@ async function runAll() {
   // generateSMA(sma3);
 
   await new Promise(resolve => setTimeout(resolve, 1000));
-  const startTimegenerate = new Date("2026-02-01 00:20:00");
-  const endTimegenerate = new Date("2026-03-09 13:00:00");
+  const startTimegenerate = new Date("2026-03-08 00:20:00");
+  const endTimegenerate = new Date("2027-03-09 13:00:00");
 
   
 const volumes = expo(500, 1.142, 1);
@@ -156,15 +156,15 @@ const addPercents = expo(0.01, 1.55, 3.9);
 
   };
   console.log(`\n^^^^^^^^^^^^^^^^^^^^\n${startTimegenerate.toISOString().split('T')[0]} ${endTimegenerate.toISOString().split('T')[0]}\nVolumes:${volumes}\nSum: ${volumessum}\nTake: ${takeprofit}\nPercents: ${addPercents}\n${LOOKBACK_HOURS2} hours Drop Percents: min ${MIN_DROP_PERCENT2}, max ${MAX_DROP_PERCENT2}\n^^^^^^^^^^^^^^^^^^^^\n`)
- //generateTrades(startTimegenerate, endTimegenerate, config); await new Promise(resolve => setTimeout(resolve, 4000)); await runpyVisual();
+ generateTrades(startTimegenerate, endTimegenerate, config); await new Promise(resolve => setTimeout(resolve, 4000)); await runpyVisual();
 } 
 //runAll(); 
 
 
 setTimeout(() => {    
-  const startTime = "2023-03-10 00:20:00";  
+  const startTime = "2023-03-08 00:20:00";  
   const endTime = "2027-03-09 13:00:00"; 
-  const datapath = "./backtest/XAU_5m_data.csv"; 
+  const datapath = "./backtest/XAU_5m.csv"; 
   const runGeneration = require('./visualization/generation.js');
   //runGeneration(startTime, endTime, datapath, sma1, sma2, sma3);
 }, 700);  
