@@ -1,6 +1,6 @@
 //require('./runpy.js');
 
-/*
+
 const http = require("http");
 
 const PORT = process.env.PORT || 3000;
@@ -18,11 +18,11 @@ http.createServer((req, res) => {
 });
 
 require("dotenv").config();   // 🔥 ПЕРВАЯ СТРОКА
-*/
+
 
 
 //require("./bybit/ws/node.js");
-//require("./bybit/startConnection.js");
+require("./bybit/startConnection.js");
 //require("./nigger.js");
 //require("./bybit/ws/check-sign.js");
 //require('./bybit/bybitconnectiontest.js');
@@ -60,7 +60,7 @@ async function runAll() {
   const endTimegenerate = new Date("2027-03-11 00:00:00");
 
   
-const volumes = expo(500, 1.2, 1);
+const volumes = expo(190, 1.2, 1);
 const addPercents = expo(0.01, 1.11, 18);
 
 //0.116231 ,0.116091, 0.117135 0.115358, ,0.116118
