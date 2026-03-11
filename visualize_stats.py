@@ -46,7 +46,26 @@ else:
 
 print("total_profit:", total_profit)
 print("trade_volume_sum:", trade_volume_sum)
-print("ratio:", profit_to_volume_ratio if trade_volume_sum != 0 else "N/A")
+
+# ======================================================
+# === ПОДСЧЁТ positionNumber
+# ======================================================
+
+position_counts = {
+    1: 0,
+    2: 0,
+    3: 0,
+    4: 0,
+    5: 0
+}
+
+for trade in trades:
+
+    pos = trade.get("positionNumber")
+
+    if pos in position_counts:
+        position_counts[pos] += 1
+
 
 # === Создание визуальной панели ===
 fig, ax = plt.subplots(figsize=(10, 8))
@@ -68,6 +87,7 @@ plt.title(
 durations_seconds = []
 
 for trade in trades:
+
     if trade.get("positionNumber") != 1:
         continue
 
@@ -80,29 +100,61 @@ for trade in trades:
     try:
         entry_dt = datetime.strptime(entry_time, "%Y-%m-%d %H:%M:%S")
         exit_dt = datetime.strptime(exit_time, "%Y-%m-%d %H:%M:%S")
+
         duration = (exit_dt - entry_dt).total_seconds()
 
         if duration > 0:
             durations_seconds.append(duration)
+
     except Exception as e:
         print(f"Ошибка расчёта времени сделки: {e}")
 
-# === Среднее время ===
 if durations_seconds:
+
     avg_seconds = sum(durations_seconds) / len(durations_seconds)
 
     hours = int(avg_seconds // 3600)
     minutes = int((avg_seconds % 3600) // 60)
 
     avg_trade_duration_display = f"{hours} ч {minutes} мин"
+
 else:
+
     avg_trade_duration_display = "N/A"
 
+# ======================================================
+# === МАКСИМАЛЬНАЯ ПРОСАДКА ОТ AVG ENTRY
+# ======================================================
 
+max_avg_drawdown = None
 
+for trade in trades:
 
-# === Пары ключ-значение ===
+    dd = trade.get("gridDrawdownPercent")
+
+    if dd is None:
+        continue
+
+    try:
+        dd = float(dd)
+
+        if max_avg_drawdown is None or dd > max_avg_drawdown:
+            max_avg_drawdown = dd
+
+    except:
+        continue
+
+if max_avg_drawdown is not None:
+    max_avg_drawdown_display = f"{max_avg_drawdown:.2f}%"
+else:
+    max_avg_drawdown_display = "N/A"
+    
+# ======================================================
+# === ТАБЛИЦА СТАТИСТИКИ
+# ======================================================
+
 info_lines = [
+
     ("Всего дней в данных", stats["totalDaysInData"]),
     ("Всего сделок", stats["totalTrades"]),
     ("Профитных сделок", stats["profitableTrades"]),
@@ -118,8 +170,15 @@ info_lines = [
     ("Объём сделки (volumessum)", trade_volume_sum),
     ("Профит / объём сделки", profit_to_volume_ratio_display),
 
-    # 🔥 НОВАЯ СТРОКА
     ("Среднее время в сделке (position 1)", avg_trade_duration_display),
+
+    # === НОВЫЕ СТРОКИ ===
+    ("Сделок positionNumber = 1", position_counts[1]),
+    ("Сделок positionNumber = 2", position_counts[2]),
+    ("Сделок positionNumber = 3", position_counts[3]),
+    ("Сделок positionNumber = 4", position_counts[4]),
+    ("Сделок positionNumber = 5", position_counts[5]),
+    ("Макс. просадка от avgEntryPrice", max_avg_drawdown_display),
 ]
 
 # === Цвета и стили ===
@@ -129,6 +188,7 @@ row_height = 0.06
 
 # === Отрисовка строк ===
 for i, (label, value) in enumerate(info_lines):
+
     y = 0.95 - i * row_height
 
     box = FancyBboxPatch(
@@ -140,10 +200,12 @@ for i, (label, value) in enumerate(info_lines):
         edgecolor="#DDDDDD",
         facecolor="#F7F7F7"
     )
+
     ax.add_patch(box)
 
     ax.text(
-        0.05, y,
+        0.05,
+        y,
         f"{label}:",
         fontsize=12,
         ha="left",
@@ -152,7 +214,8 @@ for i, (label, value) in enumerate(info_lines):
     )
 
     ax.text(
-        0.95, y,
+        0.95,
+        y,
         f"{value}",
         fontsize=12,
         ha="right",
@@ -161,9 +224,13 @@ for i, (label, value) in enumerate(info_lines):
     )
 
 plt.tight_layout()
-plt.savefig("result/topresult/trade_stats_summary.png", dpi=150)
-plt.close()
 
+plt.savefig(
+    "result/topresult/trade_stats_summary.png",
+    dpi=150
+)
+
+plt.close()
 
 
 # === Инициализация ===

@@ -85,8 +85,13 @@ const isPriceChangeInRange = (candles, currentIndex) => {
     `   📊 Падение: ${changePercent.toFixed(2)}%\n`
   );
 */
+//console.log(`📊 Падение: ${changePercent.toFixed(2)}% ${new Date(startCandle.time).toLocaleString()}`)
+/*
   const absMin = Math.abs(minPercent);
   const absMax = Math.abs(maxPercent);
+*/
+  const absMin = minPercent;
+  const absMax = maxPercent;
 
   return changePercent >= absMin && changePercent <= absMax;
 };
@@ -171,7 +176,7 @@ const isPriceChangeInRange = (candles, signalIndex) => {
 
 
 
-  for (let i = 0; i < candles.length; i++) {
+for (let i = 0; i < candles.length; i++) {
     const candle = candles[i];
     const [datePart, timePart] = candle.time.split(" ");
 
@@ -184,6 +189,7 @@ const isPriceChangeInRange = (candles, signalIndex) => {
 
 
     const [hh, mm] = timePart.split(":");
+/*
     if (mm !== "05" && mm !== "35") continue;
     if (hh === "02") continue;
     if (hh === "13") continue;
@@ -195,12 +201,17 @@ const isPriceChangeInRange = (candles, signalIndex) => {
     if (hh === "21") continue;
     if (hh === "22") continue;
     if (hh === "23") continue;
+*/
 
+    if (mm !== "05" && mm !== "35") continue;
 
+    if (hh === "04") continue;
+    if (hh === "05") continue;
+    if (hh === "10") continue;
+    if (hh === "11") continue;
+    if (hh === "13") continue;
+    if (hh === "14") continue;
 
-
-
-    
 
     if (nextAllowedEntryTime && candle.time < nextAllowedEntryTime) {
       continue;
@@ -239,6 +250,7 @@ const isPriceChangeInRange = (candles, signalIndex) => {
     let entryPrice5, entryWithSpread5, entryTime5;
 
     let exitPrice = null;
+    let avgEntryPrice =  null;
     let exitTime = null;
     let exitIndex = null;
     let finalTakeProfit = null;
@@ -246,10 +258,28 @@ const isPriceChangeInRange = (candles, signalIndex) => {
 
     let exitReason = "TAKE";
 
+    // === МИНИМАЛЬНЫЕ ЦЕНЫ ДЛЯ ПРОСАДКИ ===
+    let minPrice1 = entryPrice1;
+    let minPrice2 = null;
+    let minPrice3 = null;
+    let minPrice4 = null;
+    let minPrice5 = null;
 
+    // === МИНИМУМ ВСЕЙ СДЕЛКИ ===
+    let minPriceWholeTrade = entryPrice1;
     // ===== ПОИСК СОБЫТИЙ =====
     for (let j = i + 1; j < candles.length; j++) {
       const c = candles[j];
+
+      // === ОБНОВЛЯЕМ МИНИМУМЫ ===
+      if (c.low < minPrice1) minPrice1 = c.low;
+      if (secondOpened && (minPrice2 === null || c.low < minPrice2)) minPrice2 = c.low;
+      if (thirdOpened && (minPrice3 === null || c.low < minPrice3)) minPrice3 = c.low;
+      if (fourthOpened && (minPrice4 === null || c.low < minPrice4)) minPrice4 = c.low;
+      if (fifthOpened && (minPrice5 === null || c.low < minPrice5)) minPrice5 = c.low;
+            // === ОБНОВЛЯЕМ МИНИМУМ ВСЕЙ СДЕЛКИ ===
+      if (c.low < minPriceWholeTrade) minPriceWholeTrade = c.low;
+
 
       // === TP ТОЛЬКО ПО 1-Й ===
       if (
@@ -270,6 +300,7 @@ const isPriceChangeInRange = (candles, signalIndex) => {
         entryPrice2 = addPrice2;
         entryTime2 = c.time;
         entryWithSpread2 = entryPrice2 + SPREAD / 2;
+        minPrice2 = entryPrice2;
         lastEntryCandleIndex = j;
       }
 
@@ -282,6 +313,7 @@ const isPriceChangeInRange = (candles, signalIndex) => {
           entryPrice3 = addPrice3;
           entryTime3 = c.time;
           entryWithSpread3 = entryPrice3 + SPREAD / 2;
+          minPrice3 = entryPrice3;
           lastEntryCandleIndex = j;
         }
         // === 4-Я ===
@@ -293,6 +325,7 @@ const isPriceChangeInRange = (candles, signalIndex) => {
             entryPrice4 = addPrice4;
             entryTime4 = c.time;
             entryWithSpread4 = entryPrice4 + SPREAD / 2;
+            minPrice4 = entryPrice4;
             lastEntryCandleIndex = j;
           }
         }
@@ -329,6 +362,7 @@ const isPriceChangeInRange = (candles, signalIndex) => {
             entryPrice5 = addPrice5;
             entryTime5 = c.time;
             entryWithSpread5 = entryPrice5 + SPREAD / 2;
+            minPrice5 = entryPrice5;
             lastEntryCandleIndex = j;
           }
         }
@@ -348,7 +382,7 @@ const isPriceChangeInRange = (candles, signalIndex) => {
             (fourthOpened ? entryWithSpread4 * VOLUME4 : 0) +
             (fifthOpened ? entryWithSpread5 * VOLUME5 : 0)) /
           totalVolume;
-
+        avgEntryPrice = avgEntry;
         const tpAvg = avgEntry * (1 + TP_PERCENT);
 
         if (
@@ -375,6 +409,12 @@ const isPriceChangeInRange = (candles, signalIndex) => {
     const profit = (exit, entry, vol) =>
       exit * (vol / entry) - vol;
 
+    const drawdownPercent = (entry, min) =>
+      ((entry - min) / entry) * 100;
+
+    const gridDrawdownPercent = (avg, min) =>
+      ((avg - min) / avg) * 100;
+
     trades.push({
       entryTime: entryTime1,
       entryPrice: entryPrice1,
@@ -390,7 +430,10 @@ const isPriceChangeInRange = (candles, signalIndex) => {
       profitQuoted: profit(exitWithSpread, entryWithSpread1, VOLUME1),
       spreadUsed: SPREAD,
       positionNumber: 1,
-      volumessum: volumessum
+      volumessum: volumessum,
+      avgEntryPrice: avgEntryPrice,
+      maxDrawdownPercent: drawdownPercent(entryPrice1, minPrice1),
+      gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade)
     });
 
     if (secondOpened)
@@ -409,7 +452,10 @@ const isPriceChangeInRange = (candles, signalIndex) => {
         profitQuoted: profit(exitWithSpread, entryWithSpread2, VOLUME2),
         spreadUsed: SPREAD,
         positionNumber: 2,
-        volumessum: volumessum
+        volumessum: volumessum,
+        avgEntryPrice: avgEntryPrice,
+        maxDrawdownPercent: drawdownPercent(entryPrice2, minPrice2),
+        gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade)
       });
 
     if (thirdOpened)
@@ -428,7 +474,10 @@ const isPriceChangeInRange = (candles, signalIndex) => {
         profitQuoted: profit(exitWithSpread, entryWithSpread3, VOLUME3),
         spreadUsed: SPREAD,
         positionNumber: 3,
-        volumessum: volumessum
+        volumessum: volumessum,
+        avgEntryPrice: avgEntryPrice,
+        maxDrawdownPercent: drawdownPercent(entryPrice3, minPrice3),
+        gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade)
       });
 
     if (fourthOpened)
@@ -447,7 +496,10 @@ const isPriceChangeInRange = (candles, signalIndex) => {
         profitQuoted: profit(exitWithSpread, entryWithSpread4, VOLUME4),
         spreadUsed: SPREAD,
         positionNumber: 4,
-        volumessum: volumessum
+        volumessum: volumessum,
+        avgEntryPrice: avgEntryPrice,
+        maxDrawdownPercent: drawdownPercent(entryPrice4, minPrice4),
+        gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade)
       });
 
     if (fifthOpened)
@@ -466,7 +518,10 @@ const isPriceChangeInRange = (candles, signalIndex) => {
         profitQuoted: profit(exitWithSpread, entryWithSpread5, VOLUME5),
         spreadUsed: SPREAD,
         positionNumber: 5,
-        volumessum: volumessum
+        volumessum: volumessum,
+        avgEntryPrice: avgEntryPrice,
+        maxDrawdownPercent: drawdownPercent(entryPrice5, minPrice5),
+        gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade)
       });
   }
 

@@ -12,11 +12,11 @@ const saveResults = require("./utils/saveResults");
 const { runStrategyEveryHour } = require("./strategies/Every_hour_position.js");
 const { runMorningQuintupleLongStrategy } = require("./strategies/instarding.js");
 
-function generateTrades(startTimegenerate, endTimegenerate, config) {
+function generateTrades(startTimegenerate, endTimegenerate, config, datapath) {
 const candles = [];
 
 
-fs.createReadStream("backtest/ETHUSDT_5m.csv")
+fs.createReadStream(datapath)
   .pipe(csv())
   .on("data", (row) => {
     const candleTime = new Date(row.time);

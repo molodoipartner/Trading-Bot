@@ -1,39 +1,6 @@
-const { spawn } = require("child_process");
-function runMT5() {
-    return new Promise((resolve, reject) => {
-        const py = spawn("python", ["mt5.py"], {
-            cwd: __dirname,
-            shell: true
-        });
+//require('./runpy.js');
 
-        let out = "";
-        let err = "";
-
-        py.stdout.on("data", d => out += d.toString());
-        py.stderr.on("data", d => err += d.toString());
-
-        py.on("close", code => {
-            if (code !== 0) {
-                reject(err || `Python exited with code ${code}`);
-            } else {
-                resolve(out.trim());
-            }
-        });
-    });
-}
 /*
-(async () => {
-    try {
-        const result = await runMT5();
-        console.log(result);
-    } catch (e) {
-        console.error("Error:", e);
-    }
-})();
-*/
-///require('./runpy.js');
-
-
 const http = require("http");
 
 const PORT = process.env.PORT || 3000;
@@ -51,11 +18,11 @@ http.createServer((req, res) => {
 });
 
 require("dotenv").config();   // 🔥 ПЕРВАЯ СТРОКА
-
+*/
 
 
 //require("./bybit/ws/node.js");
-require("./bybit/startConnection.js");
+//require("./bybit/startConnection.js");
 //require("./nigger.js");
 //require("./bybit/ws/check-sign.js");
 //require('./bybit/bybitconnectiontest.js');
@@ -78,6 +45,10 @@ const sma1 = 1201;
 const sma2 = 1682;
 const sma3 = 1503;
 
+const datapath = "./backtest/XAUUSD_M5_4years.csv";
+//XAUUSD_M5_4years.csv
+//ETHUSDT_5m.csv
+
 
 async function runAll() { 
   //generateSMA(sma1);
@@ -85,17 +56,28 @@ async function runAll() {
   // generateSMA(sma3);
 
   await new Promise(resolve => setTimeout(resolve, 1000));
-  const startTimegenerate = new Date("2026-03-08 00:20:00");
-  const endTimegenerate = new Date("2027-03-09 13:00:00");
+  const startTimegenerate = new Date("2023-03-11 00:00:00");
+  const endTimegenerate = new Date("2027-03-11 00:00:00");
 
   
-const volumes = expo(500, 1.142, 1);
-const addPercents = expo(0.01, 1.523, 4.19);
+const volumes = expo(500, 1.2, 1);
+const addPercents = expo(0.01, 1.11, 18);
 
 //0.116231 ,0.116091, 0.117135 0.115358, ,0.116118
 //
 //1.7265
 /*
+Gold
+const volumes = expo(500, 1.2, 1);
+const addPercents = expo(0.01, 1.11, 18);
+
+Eth
+
+volumes: expoVolumesFromTotal(deposit, 1.142, 1, 5),
+addPercents: expoPercents(0.01, 1.523, 4.19, 5)
+
+
+
 const volumes = expo(500, 1.142, 1);
 const addPercents = expo(0.01, 1.523, 4.19);
 const volumes = expo(500, 1.16, 1);
@@ -119,10 +101,10 @@ const addPercents = expo(0.01, 1.55, 3.9);
   const [
     VOLUME1,
     VOLUME2,
-    VOLUME3,
-    VOLUME4,
-    VOLUME5,
+    VOLUME3
   ] = volumes;
+  const VOLUME4 = 0;
+  const VOLUME5 = 0;
   const volumessum = (VOLUME1 + VOLUME2 + VOLUME3 + VOLUME4 + VOLUME5)
   const [
     ADD_PERCENT,
@@ -130,11 +112,11 @@ const addPercents = expo(0.01, 1.55, 3.9);
     FOURTH_ADD_PERCENT,
     FIFTH_ADD_PERCENT
   ] = addPercents;
-  const MIN_DROP_PERCENT2 =  0.505;
-  const MAX_DROP_PERCENT2 =  2;
+  const MIN_DROP_PERCENT2 = 0.157;
+  const MAX_DROP_PERCENT2 = 0.267;
 
   const LOOKBACK_HOURS2 = 2;
-  const takeprofit = 0.011;
+  const takeprofit = 0.0032;
   const config = {
     START_BALANCE: 0, 
     SPREAD: 0,
@@ -153,19 +135,85 @@ const addPercents = expo(0.01, 1.55, 3.9);
     MIN_DROP_PERCENT1: MIN_DROP_PERCENT2,
     MAX_DROP_PERCENT1: MAX_DROP_PERCENT2,
     volumessum: volumessum,
-
+    //Volumes: 500,675,911.25,1230.1875,1660.753125
   };
-  console.log(`\n^^^^^^^^^^^^^^^^^^^^\n${startTimegenerate.toISOString().split('T')[0]} ${endTimegenerate.toISOString().split('T')[0]}\nVolumes:${volumes}\nSum: ${volumessum}\nTake: ${takeprofit}\nPercents: ${addPercents}\n${LOOKBACK_HOURS2} hours Drop Percents: min ${MIN_DROP_PERCENT2}, max ${MAX_DROP_PERCENT2}\n^^^^^^^^^^^^^^^^^^^^\n`)
- generateTrades(startTimegenerate, endTimegenerate, config); await new Promise(resolve => setTimeout(resolve, 4000)); await runpyVisual();
+  console.log(`\n^^^^^^^^^^^^^^^^^^^^\n${startTimegenerate.toISOString().split('T')[0]} - ${endTimegenerate.toISOString().split('T')[0]}\nVolumes: V1=${VOLUME1}, V2=${VOLUME2}, V3=${VOLUME3}, V4=${VOLUME4}, V5=${VOLUME5}\nSum: ${volumessum}\nTake: ${takeprofit}\nPercents: ${addPercents}\nDrop Percents: min ${MIN_DROP_PERCENT2}, max ${MAX_DROP_PERCENT2}\n^^^^^^^^^^^^^^^^^^^^\n`)
+ generateTrades(startTimegenerate, endTimegenerate, config, datapath); await new Promise(resolve => setTimeout(resolve, 4000)); await runpyVisual();
 } 
 //runAll(); 
 
 
 setTimeout(() => {    
-  const startTime = "2023-03-08 00:20:00";  
-  const endTime = "2027-03-09 13:00:00"; 
-  const datapath = "./backtest/XAU_5m.csv"; 
+  const startTime = "2025-03-11 00:00:00";  
+  const endTime = "2027-03-11 00:00:00"; 
+  const datapath2 = datapath; 
   const runGeneration = require('./visualization/generation.js');
-  //runGeneration(startTime, endTime, datapath, sma1, sma2, sma3);
-}, 700);  
+  //runGeneration(startTime, endTime, datapath2, sma1, sma2, sma3);
+}, 100);  
 
+/*
+
+function calculateAveragePrice(initialVolume, multiplier, firstPrice, drops) {
+
+  let totalVolume = 0;
+  let weightedPriceSum = 0;
+
+  let price = firstPrice;
+
+  console.log("----- POSITIONS -----");
+
+  drops.forEach((drop, i) => {
+
+    if (i !== 0) {
+      price = price * (1 - drop / 100);
+    }
+
+    const volume = initialVolume * Math.pow(multiplier, i);
+
+    console.log(
+      `Position ${i + 1} | drop=${drop}% | price=${price.toFixed(4)} | volume=${volume.toFixed(2)}`
+    );
+
+    totalVolume += volume;
+    weightedPriceSum += price * volume;
+
+  });
+
+  const avgPrice = weightedPriceSum / totalVolume;
+
+  console.log("---------------------");
+  console.log("Total volume:", totalVolume.toFixed(2));
+  console.log("Average price:", avgPrice);
+
+  return avgPrice;
+}
+const initialVolume = 500;
+const multiplier = 1.2;
+const firstPrice = 3201.33;
+
+const drops = [0, 0.01, 0.031914, 0.065288,0.116118];
+
+calculateAveragePrice(
+  initialVolume,
+  multiplier,
+  firstPrice,
+  drops
+);
+*/
+
+
+
+/*
+
+const reverseExpo = require("./reverseSmoothExpo.js");
+
+const percents = [
+  0.01,
+  0.0298,
+  0.051778,
+  0.076174,
+  0.103253
+];
+
+reverseExpo(percents);
+*/
