@@ -144,7 +144,7 @@ const addPercents = expo(0.01, 1.55, 3.9);
 
 
 setTimeout(() => {    
-  const startTime = "2025-03-11 00:00:00";  
+  const startTime = "2023-03-11 00:00:00";  
   const endTime = "2027-03-11 00:00:00"; 
   const datapath2 = datapath; 
   const runGeneration = require('./visualization/generation.js');

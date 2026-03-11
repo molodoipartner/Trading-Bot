@@ -56,31 +56,32 @@ function expoPercents(
 }
 
 
-//const deposit = 692;
-const deposit = 650;
+const deposit = 692;
+//const deposit = 650;
 // ================= CONFIG =================
 const STRATEGY_CONFIG = {
-  symbol: "XAUUSDT",
-  //symbol: "ETHUSDT",
-  DISABLED_HOURS: [4, 5, 10, 11, 13, 14], // часы по серверному времени
-  //DISABLED_HOURS: [2, 13, 14, 17, 18, 19, 20, 21, 22, 23], // часы по серверному времени    
-  minPercent: -0.157,
-  maxPercent: -0.267,
-  //minPercent: -0.505,
-  //maxPercent: -2,
+  //symbol: "XAUUSDT",
+  symbol: "ETHUSDT",
+  //DISABLED_HOURS: [4, 5, 10, 11, 13, 14], // часы по серверному времени
+  DISABLED_HOURS: [2, 13, 14, 17, 18, 19, 20, 21, 22, 23], // часы по серверному времени    
+  //minPercent: -0.157,
+  //maxPercent: -0.267,
+  minPercent: -0.505,
+  maxPercent: -2,
 
   order: {
-    leverage: 10,
-    takeProfitPercent: 0.32,
-    //leverage: 3.2,
-    //takeProfitPercent: 1.1,
+    //leverage: 10,
+    //takeProfitPercent: 0.32,
+    leverage: 3.2,
+    takeProfitPercent: 1.1,
   },
 
   deposit: deposit,
 
-
-  volumes: expoVolumesFromTotal(deposit, 1.2, 1, 5),
-  addPercents: expoPercents(0.01, 1.11, 18, 5)
+  volumes: expoVolumesFromTotal(deposit, 1.142, 1, 5),
+  addPercents: expoPercents(0.01, 1.523, 4.19, 5)
+  //volumes: expoVolumesFromTotal(deposit, 1.2, 1, 5),
+  //addPercents: expoPercents(0.01, 1.11, 18, 5)
 };
 
 console.log("Strategy:", STRATEGY_CONFIG);
@@ -142,10 +143,10 @@ async function checkEthStrategy() {
    
       //For every entry type
       const leverage = STRATEGY_CONFIG.order.leverage;
-      const MIN_QTY = 0.001;
-      const QTY_STEP = 0.001;
-      //const MIN_QTY = 0.01;
-      //const QTY_STEP = 0.01;
+      //const MIN_QTY = 0.001;
+      //const QTY_STEP = 0.001;
+      const MIN_QTY = 0.01;
+      const QTY_STEP = 0.01;
       function roundToStep(value, step) {
         const precision = step.toString().split(".")[1]?.length || 0;
         const rounded = Math.floor(value / step) * step;
@@ -153,8 +154,8 @@ async function checkEthStrategy() {
       }
       // ---------- MARKET ORDER WITH LEVERAGE ----------
 
-      //const volumeUSDT0 = STRATEGY_CONFIG.volumes[0];
-      const volumeUSDT0 = 190;
+      const volumeUSDT0 = STRATEGY_CONFIG.volumes[0];
+      //const volumeUSDT0 = 190;
       const positionValueUSDT0 = volumeUSDT0 * leverage;
       let qtyETH0 = positionValueUSDT0 / result.endPrice;
       const RawQtyETH0 = qtyETH0;
@@ -182,8 +183,8 @@ async function checkEthStrategy() {
       const price = Number(
         (result.endPrice - (result.endPrice * STRATEGY_CONFIG.addPercents[0])).toFixed(2)
       );
-      //const volumeUSDT = STRATEGY_CONFIG.volumes[1];
-      const volumeUSDT = 228;
+      const volumeUSDT = STRATEGY_CONFIG.volumes[1];
+      //const volumeUSDT = 228;
       const positionValueUSDT = volumeUSDT * leverage;
       let qtyETH = positionValueUSDT / price;
       const RawQtyETH = qtyETH;
@@ -212,8 +213,8 @@ async function checkEthStrategy() {
       const price2 = Number(
         (price - (price * STRATEGY_CONFIG.addPercents[1])).toFixed(2)
       );
-      //const volumeUSDT2 = STRATEGY_CONFIG.volumes[2];
-      const volumeUSDT2 = 273.6;
+      const volumeUSDT2 = STRATEGY_CONFIG.volumes[2];
+      //const volumeUSDT2 = 273.6;
       const positionValueUSDT2 = volumeUSDT2 * leverage;
       let qtyETH2 = positionValueUSDT2 / price2;
       const RawQtyETH2 = qtyETH2;
@@ -237,7 +238,7 @@ async function checkEthStrategy() {
         price: price2,
         leverage,             // ✅ плечо отдельно
       });
-    /*
+    
       // ---------- LIMIT ORDER 3 WITH LEVERAGE ----------
       const price3 = Number(
         (price2 - (price2 * STRATEGY_CONFIG.addPercents[2])).toFixed(2)
@@ -295,7 +296,7 @@ async function checkEthStrategy() {
         price: price4,
         leverage,             // ✅ плечо отдельно
       });
-*/
+
     console.log("✅ All orders placed successfully");
 
   } catch (e) {
