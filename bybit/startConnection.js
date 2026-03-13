@@ -387,7 +387,12 @@ async function updateTakeProfitFromPosition(position) {
 
   if (!Number(size)) return;
 
-  const tp = calcTakeProfit(Number(avgPrice), STRATEGY_CONFIG.order.takeProfitPercent);
+  const symbol = STRATEGY_CONFIG.symbol;
+
+  const tp = calcTakeProfit(
+    Number(avgPrice),
+    STRATEGY_CONFIG.order.takeProfitPercent
+  );
 
   console.log("🎯 Updating TP:", {
     avgPrice,
@@ -395,12 +400,51 @@ async function updateTakeProfitFromPosition(position) {
     tp: tp.toFixed(2),
   });
 
-  await privateRequest("POST", "/v5/position/trading-stop", {
+  // ---------- GET ACTIVE ORDERS ----------
+  const orders = await privateRequest(
+    "GET",
+    "/v5/order/realtime",
+    {
+      category: "linear",
+      symbol
+    }
+  );
+
+  const reduceOnlyOrders = orders.result.list.filter(o => o.reduceOnly);
+
+  // ---------- CANCEL OLD REDUCE ONLY ----------
+  for (const order of reduceOnlyOrders) {
+    await privateRequest(
+      "POST",
+      "/v5/order/cancel",
+      {
+        category: "linear",
+        symbol,
+        orderId: order.orderId
+      }
+    );
+
+    console.log("❌ Cancelled old TP:", order.orderId);
+  }
+
+  // ---------- CREATE NEW LIMIT TP ----------
+  const tpPayload = {
     category: "linear",
-    symbol: STRATEGY_CONFIG.symbol,
-    takeProfit: tp.toFixed(2),
-    tpTriggerBy: "LastPrice",
-  });
+    symbol,
+    side: "Sell",
+    orderType: "Limit",
+    qty: size.toString(),
+    price: tp.toFixed(2),
+    reduceOnly: true
+  };
+
+  const result = await privateRequest(
+    "POST",
+    "/v5/order/create",
+    tpPayload
+  );
+
+  console.log("🎯 New Take Profit LIMIT placed:", result.result);
 }
 
 
@@ -431,7 +475,12 @@ async function cancelAllOrders(symbol) {
         stopStrategy();
       },
 
-      onExecution: async () => {
+      onExecution: async (execution) => {
+          
+        // игнорируем funding и прочее
+       console.log(JSON.stringify(execution, null, 2));
+        if (execution.execType !== "Trade") return;
+        console.log("Execution Passed!")
         if (!isInPosition || tpUpdateLock) return;
 
         tpUpdateLock = true;

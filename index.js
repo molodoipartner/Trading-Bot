@@ -1,6 +1,5 @@
 //require('./runpy.js');
 
-
 const http = require("http");
 
 const PORT = process.env.PORT || 3000;
@@ -57,16 +56,22 @@ async function runAll() {
 
   await new Promise(resolve => setTimeout(resolve, 1000));
   const startTimegenerate = new Date("2023-03-11 00:00:00");
+  //const startTimegenerate = new Date("2026-03-09 01:05:00");
   const endTimegenerate = new Date("2027-03-11 00:00:00");
 
   
-const volumes = expo(190, 1.2, 1);
-const addPercents = expo(0.01, 1.11, 18);
+const volumes = expo(190, 1.16, 1);
+const addPercents = expo(0.01, 1.123, 18.9);
 
 //0.116231 ,0.116091, 0.117135 0.115358, ,0.116118
 //
 //1.7265
 /*
+  
+const volumes = expo(190, 1.2, 1);
+const addPercents = expo(0.01, 1.11, 18);
+
+
 Gold
 const volumes = expo(500, 1.2, 1);
 const addPercents = expo(0.01, 1.11, 18);
@@ -101,7 +106,7 @@ const addPercents = expo(0.01, 1.55, 3.9);
   const [
     VOLUME1,
     VOLUME2,
-    VOLUME3
+    VOLUME3,
   ] = volumes;
   const VOLUME4 = 0;
   const VOLUME5 = 0;
@@ -112,11 +117,11 @@ const addPercents = expo(0.01, 1.55, 3.9);
     FOURTH_ADD_PERCENT,
     FIFTH_ADD_PERCENT
   ] = addPercents;
-  const MIN_DROP_PERCENT2 = 0.157;
-  const MAX_DROP_PERCENT2 = 0.267;
+  const MIN_DROP_PERCENT2 = 0.40;
+  const MAX_DROP_PERCENT2 =  0.57;
 
-  const LOOKBACK_HOURS2 = 2;
-  const takeprofit = 0.0032;
+  const LOOKBACK_HOURS2 = 10;
+  const takeprofit = 0.0044;
   const config = {
     START_BALANCE: 0, 
     SPREAD: 0,
@@ -145,11 +150,11 @@ const addPercents = expo(0.01, 1.55, 3.9);
 
 setTimeout(() => {    
   const startTime = "2023-03-11 00:00:00";  
-  const endTime = "2027-03-11 00:00:00"; 
+  const endTime = "2027-12-15 00:00:00"; 
   const datapath2 = datapath; 
   const runGeneration = require('./visualization/generation.js');
   //runGeneration(startTime, endTime, datapath2, sma1, sma2, sma3);
-}, 100);  
+}, 4000);  
 
 /*
 

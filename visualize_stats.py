@@ -148,6 +148,20 @@ if max_avg_drawdown is not None:
     max_avg_drawdown_display = f"{max_avg_drawdown:.2f}%"
 else:
     max_avg_drawdown_display = "N/A"
+
+# ======================================================
+# === ДОБАВЛЕНО: ЗАРАБОТОК В МЕСЯЦ
+# ======================================================
+
+if max_avg_drawdown is not None and trade_volume_sum != 0:
+
+    monthly_earnings = (100 / max_avg_drawdown) * (profit_to_volume_ratio / 36)
+
+    monthly_earnings_display = f"{monthly_earnings:.4f}"
+
+else:
+
+    monthly_earnings_display = "N/A"
     
 # ======================================================
 # === ТАБЛИЦА СТАТИСТИКИ
@@ -179,6 +193,9 @@ info_lines = [
     ("Сделок positionNumber = 4", position_counts[4]),
     ("Сделок positionNumber = 5", position_counts[5]),
     ("Макс. просадка от avgEntryPrice", max_avg_drawdown_display),
+
+    # === ДОБАВЛЕНО ===
+    ("Заработок в месяц", monthly_earnings_display),
 ]
 
 # === Цвета и стили ===
@@ -315,6 +332,101 @@ plt.tight_layout()
 plt.savefig("result/hour_profit.png")
 plt.close()
 
+# ======================================================
+# === ТОП 10 САМЫХ ДЛИННЫХ СДЕЛОК + ИНФОРМАЦИЯ
+# ======================================================
+
+trade_durations = []
+
+for trade in trades:
+
+    entry_time = trade.get("entryTime")
+    exit_time = trade.get("exitTime")
+
+    if not entry_time or not exit_time:
+        continue
+
+    try:
+        entry_dt = datetime.strptime(entry_time, "%Y-%m-%d %H:%M:%S")
+        exit_dt = datetime.strptime(exit_time, "%Y-%m-%d %H:%M:%S")
+
+        duration_hours = (exit_dt - entry_dt).total_seconds() / 3600
+
+        change_percent = trade.get("changePercent", 0)
+        drawdown = trade.get("maxDrawdownPercent", 0)
+        up_before_third = trade.get("maxUpBeforeThirdPercent", None)
+
+        trade_durations.append({
+            "entryTime": entry_time,
+            "entryHour": entry_dt.strftime("%H:%M"),
+            "hours": duration_hours,
+            "changePercent": change_percent,
+            "drawdown": drawdown,
+            "upBeforeThird": up_before_third
+        })
+
+    except Exception as e:
+        print("Ошибка времени:", e)
+
+
+# === сортировка по длительности
+trade_durations_sorted = sorted(
+    trade_durations,
+    key=lambda x: x["hours"],
+    reverse=True
+)
+
+top_trades = trade_durations_sorted[:10]
+
+labels = [str(i+1) for i in range(len(top_trades))]
+hours = [t["hours"] for t in top_trades]
+
+plt.figure(figsize=(13,7))
+
+bars = plt.bar(labels, hours)
+
+plt.title("TOP 10 самых долгих позиций")
+plt.xlabel("Ранг позиции")
+plt.ylabel("Часы в сделке")
+
+plt.grid(axis="y")
+
+# === подписи информации
+for i, bar in enumerate(bars):
+
+    trade = top_trades[i]
+
+    height = bar.get_height()
+
+    up_text = "N/A"
+    if trade["upBeforeThird"] is not None:
+        up_text = f"{trade['upBeforeThird']:.2f}%"
+
+    text = (
+        f"{height:.2f}h\n"
+        f"Open: {trade['entryHour']}\n"
+        f"Δ: {trade['changePercent']:.2f}%\n"
+        f"DD: {trade['drawdown']:.2f}%\n"
+        f"UP: {up_text}"
+    )
+
+    plt.text(
+        bar.get_x() + bar.get_width()/2,
+        height,
+        text,
+        ha="center",
+        va="bottom",
+        fontsize=9
+    )
+
+plt.tight_layout()
+
+plt.savefig(
+    "result/topresult/top_10_longest_trades_detailed.png",
+    dpi=150
+)
+
+plt.close()
 
 """
 

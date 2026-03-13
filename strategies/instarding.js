@@ -45,6 +45,72 @@ const runMorningQuintupleLongStrategy = async (candles, config) => {
 
   
 const isPriceChangeInRange = (candles, currentIndex) => {
+
+  if (currentIndex < LOOKBACK_HOURS + 1) {
+    return { inRange: false, changePercent: null };
+  }
+
+  const minPercent = MIN_DROP_PERCENT1;
+  const maxPercent = MAX_DROP_PERCENT1;
+
+  if (minPercent === 0 && maxPercent === 0) {
+    return { inRange: true, changePercent: 0 };
+  }
+
+  const fromIndex = currentIndex - LOOKBACK_HOURS - 1;
+  const toIndex = currentIndex - 1;
+  //const toIndex = currentIndex;
+  const slice = candles.slice(fromIndex, toIndex);
+
+  const startCandle = slice[0];
+  const finishCandle = slice[slice.length - 1];
+
+  if (!startCandle || !finishCandle) {
+    console.warn("⚠️ Недостаточно свечей для расчёта");
+    return { inRange: false, changePercent: null };
+  }
+  
+
+
+  const changePercent =
+    ((startCandle.open - finishCandle.low) / startCandle.open) * 100;
+/*
+  slice.forEach((candle, i) => {
+    console.log(
+      `[${fromIndex + i}] ${new Date(candle.time).toLocaleString()} | ` +
+      `O:${candle.open} H:${candle.high} L:${candle.low} C:${candle.close}`
+    );
+  });
+
+  console.log(
+    `📉 Проверка движения:\n` +
+    `   🟢 Start candle: ${new Date(startCandle.time).toLocaleString()} | open = ${startCandle.open}\n` +
+    `   🔴 Finish candle: ${new Date(finishCandle.time).toLocaleString()} | low = ${finishCandle.low}\n` +
+    `   📊 Падение: ${changePercent.toFixed(2)}%\n`
+  );
+
+console.log(`📊 Падение: ${changePercent.toFixed(2)}% ${new Date(startCandle.time).toLocaleString()}`)
+
+*/
+  
+  const absMin = minPercent;
+  const absMax = maxPercent;
+
+  const inRange =
+    changePercent >= absMin && changePercent <= absMax;
+
+  return {
+    inRange,
+    changePercent
+  };
+
+};
+
+
+
+ 
+  
+const isPriceChangeInRange2 = (candles, currentIndex) => {
   if (currentIndex < LOOKBACK_HOURS + 1) return false;
 
   const minPercent = MIN_DROP_PERCENT1;
@@ -98,81 +164,6 @@ const isPriceChangeInRange = (candles, currentIndex) => {
 
 
 
-/* 
-
-
-const isPriceChangeInRange = (candles, signalIndex) => {
-  const minPercent = MIN_DROP_PERCENT1;
-  const maxPercent = MAX_DROP_PERCENT1;
-
-  if (minPercent === 0 && maxPercent === 0) return true;
-
-  const executionIndex = signalIndex - 1;
-  if (executionIndex < 0) return false;
-
-  const executionCandle = candles[executionIndex];
-
-  const executionTime = new Date(
-    executionCandle.time || executionCandle.timestamp
-  ).getTime();
-
-  const TWO_HOURS_MS = 2 * 5 * 60 * 1000;
-  const targetTime = executionTime - TWO_HOURS_MS;
-
-  // 🔍 ищем свечу ≈ 2 часа назад
-  let startCandle = null;
-
-  for (let i = executionIndex - 1; i >= 0; i--) {
-    const t = new Date(
-      candles[i].time || candles[i].timestamp
-    ).getTime();
-
-    if (t <= targetTime) {
-      startCandle = candles[i];
-      break;
-    }
-  }
-
-  if (!startCandle) return false;
-
-  // 🎯 ЦЕНЫ (ТОЛЬКО ЗАКРЫТЫЕ!)
-  const startPrice = startCandle.open;        // open 2 часа назад
-  const endPrice = executionCandle.close;     // close 17:25
-
-  const changePercent =
-    ((endPrice - startPrice) / startPrice) * 100;
-
-  // 🧾 ЛОГ
-  /*
-  console.log("📊 Проверка диапазона (БЕЗ ЗАГЛЯДЫВАНИЯ)");
-  console.log(
-    "🕒 Старт:",
-    startPrice,
-    "| open:",
-    startCandle.time
-  );
-  console.log(
-    "🕔 Конец:",
-    endPrice,
-    "| close:",
-    executionCandle.time
-  );
-  console.log(
-    "📐 Изменение:",
-    changePercent.toFixed(2) + "%"
-  );
-  console.log("— — — — — — — — — — —");
-
-  const absMin = Math.abs(minPercent);
-  const absMax = Math.abs(maxPercent);
-
-  return (
-    Math.abs(changePercent) >= absMin &&
-    Math.abs(changePercent) <= absMax
-  );
-};
-
-*/
 
 
 
@@ -208,19 +199,20 @@ for (let i = 0; i < candles.length; i++) {
     if (hh === "04") continue;
     if (hh === "05") continue;
     if (hh === "10") continue;
-    if (hh === "11") continue;
-    if (hh === "13") continue;
-    if (hh === "14") continue;
+    if (hh === "23") continue;
+
 
 
     if (nextAllowedEntryTime && candle.time < nextAllowedEntryTime) {
       continue;
     }
 
-    if (!isPriceChangeInRange(candles, i)) {
+    const { inRange, changePercent } = isPriceChangeInRange(candles, i);
+
+    if (!inRange) {
       continue;
     }
-;
+
 
     usedDates.add(datePart);
 
@@ -264,6 +256,7 @@ for (let i = 0; i < candles.length; i++) {
     let minPrice3 = null;
     let minPrice4 = null;
     let minPrice5 = null;
+    let maxHighBeforeThird = entryPrice1;
 
     // === МИНИМУМ ВСЕЙ СДЕЛКИ ===
     let minPriceWholeTrade = entryPrice1;
@@ -277,9 +270,12 @@ for (let i = 0; i < candles.length; i++) {
       if (thirdOpened && (minPrice3 === null || c.low < minPrice3)) minPrice3 = c.low;
       if (fourthOpened && (minPrice4 === null || c.low < minPrice4)) minPrice4 = c.low;
       if (fifthOpened && (minPrice5 === null || c.low < minPrice5)) minPrice5 = c.low;
-            // === ОБНОВЛЯЕМ МИНИМУМ ВСЕЙ СДЕЛКИ ===
+      // === ОБНОВЛЯЕМ МИНИМУМ ВСЕЙ СДЕЛКИ ===
       if (c.low < minPriceWholeTrade) minPriceWholeTrade = c.low;
-
+      // === максимум до открытия 3 позиции ===
+      if (!fifthOpened && c.high > maxHighBeforeThird) {
+        maxHighBeforeThird = c.high;
+      }
 
       // === TP ТОЛЬКО ПО 1-Й ===
       if (
@@ -415,12 +411,35 @@ for (let i = 0; i < candles.length; i++) {
     const gridDrawdownPercent = (avg, min) =>
       ((avg - min) / avg) * 100;
 
+    const upwardMovePercent = (entry, max) =>
+      ((max - entry) / entry) * 100;
+    const maxUpBeforeThird =
+      thirdOpened
+        ? upwardMovePercent(entryPrice1, maxHighBeforeThird)
+        : null;
+
+
+    const entryDate = new Date(entryTime1);
+    const exitDate = new Date(exitTime);
+
+    const diffMs = exitDate - entryDate;
+
+    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+
+    const tradeDuration =
+      String(hours).padStart(2, "0") + ":" +
+      String(minutes).padStart(2, "0") + ":" +
+      String(seconds).padStart(2, "0");
+
     trades.push({
       entryTime: entryTime1,
       entryPrice: entryPrice1,
       entryPriceWithSpread: entryWithSpread1,
       takeProfit: finalTakeProfit,
       exitTime,
+      tradeDuration: tradeDuration,
       exitPrice,
       exitPriceWithSpread: exitWithSpread,
       direction: "LONG",
@@ -433,7 +452,9 @@ for (let i = 0; i < candles.length; i++) {
       volumessum: volumessum,
       avgEntryPrice: avgEntryPrice,
       maxDrawdownPercent: drawdownPercent(entryPrice1, minPrice1),
-      gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade)
+      maxUpBeforeThirdPercent: maxUpBeforeThird,
+      gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade),
+      changePercent: changePercent
     });
 
     if (secondOpened)
@@ -455,7 +476,8 @@ for (let i = 0; i < candles.length; i++) {
         volumessum: volumessum,
         avgEntryPrice: avgEntryPrice,
         maxDrawdownPercent: drawdownPercent(entryPrice2, minPrice2),
-        gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade)
+        gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade),
+        changePercent: changePercent
       });
 
     if (thirdOpened)
@@ -477,7 +499,8 @@ for (let i = 0; i < candles.length; i++) {
         volumessum: volumessum,
         avgEntryPrice: avgEntryPrice,
         maxDrawdownPercent: drawdownPercent(entryPrice3, minPrice3),
-        gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade)
+        gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade),
+        changePercent: changePercent
       });
 
     if (fourthOpened)
@@ -499,7 +522,8 @@ for (let i = 0; i < candles.length; i++) {
         volumessum: volumessum,
         avgEntryPrice: avgEntryPrice,
         maxDrawdownPercent: drawdownPercent(entryPrice4, minPrice4),
-        gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade)
+        gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade),
+        changePercent: changePercent
       });
 
     if (fifthOpened)
@@ -521,7 +545,8 @@ for (let i = 0; i < candles.length; i++) {
         volumessum: volumessum,
         avgEntryPrice: avgEntryPrice,
         maxDrawdownPercent: drawdownPercent(entryPrice5, minPrice5),
-        gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade)
+        gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade),
+        changePercent: changePercent
       });
   }
 
