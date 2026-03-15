@@ -23,8 +23,10 @@ const runMorningQuintupleLongStrategy = async (candles, config) => {
     FIFTH_ADD_PERCENT,
     MIN_MINUTES_BETWEEN_FIRST_AND_THIRD,
     LOOKBACK_HOURS,
-    MIN_DROP_PERCENT1,
-    MAX_DROP_PERCENT1,
+    MIN_DROP_PERCENT10,
+    MAX_DROP_PERCENT10,
+    MIN_DROP_PERCENT20,
+    MAX_DROP_PERCENT20,
     volumessum
   } = config;
 
@@ -46,34 +48,47 @@ const runMorningQuintupleLongStrategy = async (candles, config) => {
   
 const isPriceChangeInRange = (candles, currentIndex) => {
 
+  // Проверяем что свечей достаточно для lookback
   if (currentIndex < LOOKBACK_HOURS + 1) {
     return { inRange: false, changePercent: null };
   }
 
-  const minPercent = MIN_DROP_PERCENT1;
-  const maxPercent = MAX_DROP_PERCENT1;
+  // Первая зона процентов
+  const minPercent1 = MIN_DROP_PERCENT10;
+  const maxPercent1 = MAX_DROP_PERCENT10;
 
-  if (minPercent === 0 && maxPercent === 0) {
+  // Вторая зона процентов (новая)
+  const minPercent2 = MIN_DROP_PERCENT20;
+  const maxPercent2 = MAX_DROP_PERCENT20;
+
+  // Если обе зоны отключены
+  if (
+    minPercent1 === 0 && maxPercent1 === 0 &&
+    minPercent2 === 0 && maxPercent2 === 0
+  ) {
     return { inRange: true, changePercent: 0 };
   }
 
+  // Определяем диапазон свечей для анализа
   const fromIndex = currentIndex - LOOKBACK_HOURS - 1;
   const toIndex = currentIndex - 1;
   //const toIndex = currentIndex;
+
   const slice = candles.slice(fromIndex, toIndex);
 
   const startCandle = slice[0];
   const finishCandle = slice[slice.length - 1];
 
+  // Если свечей недостаточно
   if (!startCandle || !finishCandle) {
     console.warn("⚠️ Недостаточно свечей для расчёта");
     return { inRange: false, changePercent: null };
   }
-  
 
-
+  // Расчёт процента изменения
   const changePercent =
     ((startCandle.open - finishCandle.low) / startCandle.open) * 100;
+
 /*
   slice.forEach((candle, i) => {
     console.log(
@@ -90,31 +105,32 @@ const isPriceChangeInRange = (candles, currentIndex) => {
   );
 
 console.log(`📊 Падение: ${changePercent.toFixed(2)}% ${new Date(startCandle.time).toLocaleString()}`)
-
 */
-  
-  const absMin = minPercent;
-  const absMax = maxPercent;
 
-  const inRange =
-    changePercent >= absMin && changePercent <= absMax;
+  // Проверяем попадание в первую зону
+  const inRange1 =
+    changePercent >= minPercent1 && changePercent <= maxPercent1;
+
+  // Проверяем попадание во вторую зону
+  const inRange2 =
+    changePercent >= minPercent2 && changePercent <= maxPercent2;
+
+  // Если попало хотя бы в одну из зон
+  const inRange = inRange1 || inRange2;
 
   return {
     inRange,
     changePercent
   };
-
 };
-
-
 
  
   
 const isPriceChangeInRange2 = (candles, currentIndex) => {
   if (currentIndex < LOOKBACK_HOURS + 1) return false;
 
-  const minPercent = MIN_DROP_PERCENT1;
-  const maxPercent = MAX_DROP_PERCENT1;
+  const minPercent = MIN_DROP_PERCENT10;
+  const maxPercent = MAX_DROP_PERCENT10;
 
   if (minPercent === 0 && maxPercent === 0) return true;
 
@@ -196,11 +212,18 @@ for (let i = 0; i < candles.length; i++) {
 
     if (mm !== "05" && mm !== "35") continue;
 
-    if (hh === "04") continue;
-    if (hh === "05") continue;
-    if (hh === "10") continue;
-    if (hh === "23") continue;
 
+    if (hh === "06") continue;
+    if (hh === "13") continue;
+    if (hh === "14") continue;
+    if (hh === "17") continue;
+    if (hh === "18") continue;
+    if (hh === "19") continue;
+    if (hh === "20") continue;
+    if (hh === "21") continue;
+    if (hh === "22") continue;
+    if (hh === "23") continue;
+    
 
 
     if (nextAllowedEntryTime && candle.time < nextAllowedEntryTime) {

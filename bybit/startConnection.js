@@ -56,18 +56,20 @@ function expoPercents(
 }
 
 
-const deposit = 692;
+const deposit = 705;
 //const deposit = 650;
 // ================= CONFIG =================
 const STRATEGY_CONFIG = {
   //symbol: "XAUUSDT",
   symbol: "ETHUSDT",
   //DISABLED_HOURS: [4, 5, 10, 11, 13, 14], // часы по серверному времени
-  DISABLED_HOURS: [2, 13, 14, 17, 18, 19, 20, 21, 22, 23], // часы по серверному времени    
+  DISABLED_HOURS: [6, 13, 14, 17, 18, 19, 20, 21, 22, 23], // часы по серверному времени    
   //minPercent: -0.157,
   //maxPercent: -0.267,
   minPercent: -0.505,
-  maxPercent: -2,
+  maxPercent: -0.8,
+  minPercent2: -1.22,
+  maxPercent2: -2,
 
   order: {
     //leverage: 10,
@@ -117,20 +119,42 @@ async function checkEthStrategy() {
     console.log(
       `ETH 2h move: ${result.percentChange.toFixed(2)}%`
     );
+
     const p = result.percentChange;
 
-    const low = Math.min(
+    // --- ПЕРВАЯ ЗОНА ---
+    const low1 = Math.min(
       STRATEGY_CONFIG.minPercent,
       STRATEGY_CONFIG.maxPercent
     );
 
-    const high = Math.max(
+    const high1 = Math.max(
       STRATEGY_CONFIG.minPercent,
       STRATEGY_CONFIG.maxPercent
     );
 
-    if (p < low || p > high) {
-      console.log(`⛔ Move ${p.toFixed(2)}% out of range (${low}% .. ${high}%)`);
+    // --- ВТОРАЯ ЗОНА (НОВАЯ) ---
+    const low2 = Math.min(
+      STRATEGY_CONFIG.minPercent2,
+      STRATEGY_CONFIG.maxPercent2
+    );
+
+    const high2 = Math.max(
+      STRATEGY_CONFIG.minPercent2,
+      STRATEGY_CONFIG.maxPercent2
+    );
+
+    // Проверяем попадание в первую зону
+    const inRange1 = p >= low1 && p <= high1;
+
+    // Проверяем попадание во вторую зону
+    const inRange2 = p >= low2 && p <= high2;
+
+    // Если не попало ни в одну из зон
+    if (!inRange1 && !inRange2) {
+      console.log(
+        `⛔ Move ${p.toFixed(2)}% out of ranges (${low1}% .. ${high1}%) OR (${low2}% .. ${high2}%)`
+      );
       console.log("❌ Strategy conditions not met");
       return;
     }

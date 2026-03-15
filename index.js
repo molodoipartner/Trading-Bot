@@ -44,7 +44,7 @@ const sma1 = 1201;
 const sma2 = 1682;
 const sma3 = 1503;
 
-const datapath = "./backtest/XAUUSD_M5_4years.csv";
+const datapath = "./backtest/ETHUSDT_5m.csv";
 //XAUUSD_M5_4years.csv
 //ETHUSDT_5m.csv
 
@@ -55,33 +55,28 @@ async function runAll() {
   // generateSMA(sma3);
 
   await new Promise(resolve => setTimeout(resolve, 1000));
-  const startTimegenerate = new Date("2023-03-11 00:00:00");
+  const startTimegenerate = new Date("2023-03-09 00:00:00");
   //const startTimegenerate = new Date("2026-03-09 01:05:00");
   const endTimegenerate = new Date("2027-03-11 00:00:00");
 
-  
-const volumes = expo(190, 1.16, 1);
-const addPercents = expo(0.01, 1.123, 18.9);
-
+const volumes = expo(500, 1.142, 1);
+const addPercents = expo(0.01, 1.54, 4.02);
 //0.116231 ,0.116091, 0.117135 0.115358, ,0.116118
 //
 //1.7265
 /*
   
-const volumes = expo(190, 1.2, 1);
-const addPercents = expo(0.01, 1.11, 18);
-
-
 Gold
-const volumes = expo(500, 1.2, 1);
-const addPercents = expo(0.01, 1.11, 18);
+const volumes = expo(190, 1.16, 1);
+const addPercents = expo(0.01, 1.123, 18.9);
 
 Eth
+  
+const volumes = expo(190, 1.142, 1);
+const addPercents = expo(0.01, 1.523, 4.19);
 
-volumes: expoVolumesFromTotal(deposit, 1.142, 1, 5),
-addPercents: expoPercents(0.01, 1.523, 4.19, 5)
-
-
+const volumes = expo(190, 1.142, 1);
+const addPercents = expo(0.01, 1.54, 4.02);
 
 const volumes = expo(500, 1.142, 1);
 const addPercents = expo(0.01, 1.523, 4.19);
@@ -107,21 +102,25 @@ const addPercents = expo(0.01, 1.55, 3.9);
     VOLUME1,
     VOLUME2,
     VOLUME3,
+    VOLUME4,
+    VOLUME5
   ] = volumes;
-  const VOLUME4 = 0;
-  const VOLUME5 = 0;
+  //const VOLUME4 = 0;
+  //const VOLUME5 = 0;
   const volumessum = (VOLUME1 + VOLUME2 + VOLUME3 + VOLUME4 + VOLUME5)
   const [
     ADD_PERCENT,
     THIRD_ADD_PERCENT,
     FOURTH_ADD_PERCENT,
     FIFTH_ADD_PERCENT
-  ] = addPercents;
-  const MIN_DROP_PERCENT2 = 0.40;
-  const MAX_DROP_PERCENT2 =  0.57;
+  ] = addPercents; 
+  const MIN_DROP_PERCENT1 = 0.505;
+  const MAX_DROP_PERCENT1 =  0.80;
+  const MIN_DROP_PERCENT2 = 1.22;
+  const MAX_DROP_PERCENT2 =  2;
 
-  const LOOKBACK_HOURS2 = 10;
-  const takeprofit = 0.0044;
+  const LOOKBACK_HOURS2 = 2;
+  const takeprofit = 0.011;
   const config = {
     START_BALANCE: 0, 
     SPREAD: 0,
@@ -137,8 +136,10 @@ const addPercents = expo(0.01, 1.55, 3.9);
     FIFTH_ADD_PERCENT,
     MIN_MINUTES_BETWEEN_FIRST_AND_THIRD: 0,
     LOOKBACK_HOURS: LOOKBACK_HOURS2,
-    MIN_DROP_PERCENT1: MIN_DROP_PERCENT2,
-    MAX_DROP_PERCENT1: MAX_DROP_PERCENT2,
+    MIN_DROP_PERCENT10: MIN_DROP_PERCENT1,
+    MAX_DROP_PERCENT10: MAX_DROP_PERCENT1,
+    MIN_DROP_PERCENT20: MIN_DROP_PERCENT2,
+    MAX_DROP_PERCENT20: MAX_DROP_PERCENT2,
     volumessum: volumessum,
     //Volumes: 500,675,911.25,1230.1875,1660.753125
   };
@@ -149,7 +150,7 @@ const addPercents = expo(0.01, 1.55, 3.9);
 
 
 setTimeout(() => {    
-  const startTime = "2023-03-11 00:00:00";  
+  const startTime = "2023-03-15 00:00:00";  
   const endTime = "2027-12-15 00:00:00"; 
   const datapath2 = datapath; 
   const runGeneration = require('./visualization/generation.js');
