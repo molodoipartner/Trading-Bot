@@ -56,7 +56,7 @@ function expoPercents(
 }
 
 
-const deposit = 705;
+const deposit = 915;
 //const deposit = 650;
 // ================= CONFIG =================
 const STRATEGY_CONFIG = {
