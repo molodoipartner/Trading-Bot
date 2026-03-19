@@ -34,7 +34,7 @@ async function main() {
     const intervalMinutes = 5;
 
     const now = Date.now();
-    const twoYearsAgo = now - 1000 * 60 * 60 * 24 * 365 * 4;
+    const twoYearsAgo = now - 1000 * 60 * 60 * 24 * 365 * 5;
 
     const minutes = (1000 * 60 * intervalMinutes);
     const candlesPerChunk = 1000;

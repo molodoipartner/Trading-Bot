@@ -8,7 +8,7 @@ from datetime import datetime
 from collections import defaultdict
 from dateutil.parser import parse as parse_datetime
 from matplotlib.patches import FancyBboxPatch
-
+from matplotlib.lines import Line2D
 # === Функция скользящего среднего ===
 def moving_average(data, window_size=3):
     return np.convolve(data, np.ones(window_size) / window_size, mode="same")
@@ -334,11 +334,16 @@ plt.close()
 
 # ======================================================
 # === ТОП 10 САМЫХ ДЛИННЫХ СДЕЛОК + ИНФОРМАЦИЯ
+# === (только positionNumber = 1)
 # ======================================================
 
 trade_durations = []
 
 for trade in trades:
+
+    # 👉 ФИЛЬТР ПО positionNumber
+    if trade.get("positionNumber") != 1:
+        continue
 
     entry_time = trade.get("entryTime")
     exit_time = trade.get("exitTime")
@@ -376,16 +381,17 @@ trade_durations_sorted = sorted(
     reverse=True
 )
 
+# === топ 10
 top_trades = trade_durations_sorted[:10]
 
-labels = [str(i+1) for i in range(len(top_trades))]
+labels = [str(i + 1) for i in range(len(top_trades))]
 hours = [t["hours"] for t in top_trades]
 
-plt.figure(figsize=(13,7))
+plt.figure(figsize=(13, 7))
 
 bars = plt.bar(labels, hours)
 
-plt.title("TOP 10 самых долгих позиций")
+plt.title("TOP 10 самых долгих позиций (positionNumber = 1)")
 plt.xlabel("Ранг позиции")
 plt.ylabel("Часы в сделке")
 
@@ -395,7 +401,6 @@ plt.grid(axis="y")
 for i, bar in enumerate(bars):
 
     trade = top_trades[i]
-
     height = bar.get_height()
 
     up_text = "N/A"
@@ -411,7 +416,7 @@ for i, bar in enumerate(bars):
     )
 
     plt.text(
-        bar.get_x() + bar.get_width()/2,
+        bar.get_x() + bar.get_width() / 2,
         height,
         text,
         ha="center",
@@ -428,6 +433,144 @@ plt.savefig(
 
 plt.close()
 
+# ======================================================
+# === ВСЕ СДЕЛКИ: changePercent vs длительность
+# === цвет = длина сделки (positionNumber = 1)
+# ======================================================
+trade_points = []
+
+for trade in trades:
+
+    if trade.get("positionNumber") != 1:
+        continue
+
+    entry_time = trade.get("entryTime")
+    exit_time = trade.get("exitTime")
+    change_percent = trade.get("changePercent")
+
+    if not entry_time or not exit_time or change_percent is None:
+        continue
+
+    try:
+        entry_dt = datetime.strptime(entry_time, "%Y-%m-%d %H:%M:%S")
+        exit_dt = datetime.strptime(exit_time, "%Y-%m-%d %H:%M:%S")
+
+        duration_hours = (exit_dt - entry_dt).total_seconds() / 3600
+
+        if duration_hours <= 0:
+            continue
+
+        trade_points.append({
+            "changePercent": float(change_percent),
+            "hours": duration_hours
+        })
+
+    except Exception as e:
+        print("Ошибка:", e)
+
+
+# === данные
+x = [t["changePercent"] for t in trade_points]
+y = [t["hours"] for t in trade_points]
+
+# === цвет
+colors = []
+for h in y:
+    if h <= 6:
+        colors.append("green")
+    elif h <= 24:
+        colors.append("orange")
+    else:
+        colors.append("red")
+
+# === сортировка
+x, y, colors = zip(*sorted(zip(x, y, colors)))
+
+# === график
+plt.figure(figsize=(15, 7))
+
+plt.vlines(x, [0], y, alpha=0.15)
+plt.scatter(x, y, c=colors, alpha=0.6)
+
+plt.axhline(0)
+
+plt.title("Все сделки: где возникают длинные и короткие (positionNumber = 1)")
+plt.xlabel("changePercent (%)")
+plt.ylabel("Длительность (часы)")
+plt.xticks(np.arange(-5, 5.1, 0.20))
+plt.grid(True)
+
+
+# ======================================================
+# === ПЛАВНЫЕ ЛИНИИ (KDE — как у тебя на первом скрине)
+# ======================================================
+
+short_x = []
+long_x = []
+
+for xi, yi in zip(x, y):
+    if yi <= 6:
+        short_x.append(xi)
+    elif yi >= 24:
+        long_x.append(xi)
+
+# диапазон X
+x_range = np.linspace(min(x), max(x), 300)
+
+# === короткие сделки (зелёная линия)
+if len(short_x) > 5:
+    kde_short = gaussian_kde(short_x)
+    y_short = kde_short(x_range)
+
+    # масштаб под график (ВАЖНО!)
+    y_short = y_short * max(y) * 0.4
+
+    plt.plot(
+        x_range,
+        y_short,
+        color="green",
+        linewidth=1,
+        alpha=0.7
+    )
+
+# === длинные сделки (красная линия)
+if len(long_x) > 5:
+    kde_long = gaussian_kde(long_x)
+    y_long = kde_long(x_range)
+
+    y_long = y_long * max(y) * 0.7
+
+    plt.plot(
+        x_range,
+        y_long,
+        color="red",
+        linewidth=1,
+        alpha=0.7
+    )
+
+
+# === легенда
+legend_elements = [
+    Line2D([0], [0], marker='o', color='w', label='Короткие (<6ч)',
+           markerfacecolor='green', markersize=8),
+    Line2D([0], [0], marker='o', color='w', label='Средние (6-24ч)',
+           markerfacecolor='orange', markersize=8),
+    Line2D([0], [0], marker='o', color='w', label='Длинные (>24ч)',
+           markerfacecolor='red', markersize=8),
+    Line2D([0], [0], color='green', lw=5, label='Плотность коротких'),
+    Line2D([0], [0], color='red', lw=5, label='Плотность длинных'),
+]
+
+plt.legend(handles=legend_elements)
+
+plt.tight_layout()
+
+plt.savefig(
+    "result/topresult/all_trades_duration_map.png",
+    dpi=150
+)
+
+plt.close()
 """
 
 # === 📅 Сделки по дням недели ===
@@ -731,7 +874,7 @@ for d in duration_weekday_stats:
     if duration_weekday_stats[d]["total"] > 0:
         duration_weekday_stats[d]["duration_avg"] = duration_weekday_stats[d]["duration_sum"] / duration_weekday_stats[d]["total"]
 
-import matplotlib.pyplot as plt
+
 
 days = day_order
 duration_sum_weekday = [round(duration_weekday_stats[d]["duration_sum"], 2) for d in days]

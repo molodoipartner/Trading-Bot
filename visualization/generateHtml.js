@@ -16,12 +16,38 @@ function generateHtml(filePath, sessionRanges, tradesPath, startTime, endTime, s
             });
         })
         .on('end', () => {
+
             // 🔄 Фильтрация по startTime и endTime
             const filteredData = data.filter(d => {
                 const time = new Date(d.datetime.replace(" ", "T")).getTime();
                 return (!startTime || new Date(startTime).getTime() <= time) &&
                        (!endTime || time <= new Date(endTime).getTime());
             });
+
+            // 🚀 АГРЕГАЦИЯ СВЕЧЕЙ (БЕЗ ПОТЕРИ DATETIME ДЛЯ СДЕЛОК)
+            const MAX_CANDLES = 3000;
+            let finalData = filteredData;
+
+            if (filteredData.length > MAX_CANDLES) {
+                const step = Math.ceil(filteredData.length / MAX_CANDLES);
+                const aggregated = [];
+
+                for (let i = 0; i < filteredData.length; i += step) {
+                    const chunk = filteredData.slice(i, i + step);
+                    if (chunk.length === 0) continue;
+
+                    aggregated.push({
+                        datetime: chunk[0].datetime,
+                        datetimes: chunk.map(d => d.datetime), // 🔥 ключ для сделок
+                        open: chunk[0].open,
+                        close: chunk[chunk.length - 1].close,
+                        high: Math.max(...chunk.map(d => d.high)),
+                        low: Math.min(...chunk.map(d => d.low))
+                    });
+                }
+
+                finalData = aggregated;
+            }
 
             // 🔄 Загрузка трейдов
             const trades = tradesPath ? JSON.parse(fs.readFileSync(tradesPath, 'utf8')) : [];
@@ -58,8 +84,6 @@ function generateHtml(filePath, sessionRanges, tradesPath, startTime, endTime, s
                 }
             }
 
-
-         
             const html = `
                 <!DOCTYPE html>
                 <html>
@@ -84,18 +108,27 @@ function generateHtml(filePath, sessionRanges, tradesPath, startTime, endTime, s
                 <body>
                     <svg width="2300" height="1200"></svg>
                     <script>
-                        const data = ${JSON.stringify(filteredData)};
+                        const data = ${JSON.stringify(finalData)};
                         const trades = ${JSON.stringify(trades)};
                         const sessionRanges = ${JSON.stringify(sessionRanges)};
                         const smaData1 = ${JSON.stringify(smaData1)};
                         const smaData2 = ${JSON.stringify(smaData2)};
                         const smaData3 = ${JSON.stringify(smaData3)};
 
-
                         const svg = d3.select("svg");
                         const margin = {top: 40, right: 20, bottom: 40, left: 80};
                         const width = +svg.attr("width") - margin.left - margin.right;
                         const height = +svg.attr("height") - margin.top - margin.bottom;
+
+                        // 🔥 FIX: индексируем ВСЕ datetime (включая агрегированные)
+                        const indexMap = new Map();
+                        data.forEach((d, i) => {
+                            if (d.datetimes) {
+                                d.datetimes.forEach(dt => indexMap.set(dt, i));
+                            } else {
+                                indexMap.set(d.datetime, i);
+                            }
+                        });
 
                         const x = d3.scaleBand()
                             .domain(data.map((_, i) => i))
@@ -131,8 +164,6 @@ function generateHtml(filePath, sessionRanges, tradesPath, startTime, endTime, s
                             .selectAll("text")
                             .style("font-size", "12px");
 
-                        
-
                         const g = svg.append("g");
 
                         // Wick lines
@@ -156,9 +187,9 @@ function generateHtml(filePath, sessionRanges, tradesPath, startTime, endTime, s
                             .attr("fill", d => d.open > d.close ? "red" : "green");
 
                         const smaLine = d3.line()
-                            .defined(d => data.find(candle => candle.datetime === d.datetime)) // фильтрация по совпадающим временам
+                            .defined(d => indexMap.has(d.datetime))
                             .x(d => {
-                                const index = data.findIndex(c => c.datetime === d.datetime);
+                                const index = indexMap.get(d.datetime);
                                 return x(index) + x.bandwidth() / 2;
                             })
                             .y(d => y(d.value));
@@ -184,7 +215,6 @@ function generateHtml(filePath, sessionRanges, tradesPath, startTime, endTime, s
                             .attr("stroke-width", 2)
                             .attr("d", smaLine);
 
-                        
                         // Session highlight
                         const groupedByDate = {};
                         data.forEach((d, i) => {
@@ -200,11 +230,11 @@ function generateHtml(filePath, sessionRanges, tradesPath, startTime, endTime, s
                             Object.values(groupedByDate).forEach(dayData => {
                                 const sessionIndices = dayData.map(d => {
                                     const dt = new Date(d.datetime.replace(" ", "T"));
-                                    const timeStr = dt.toTimeString().slice(0, 5); // "HH:MM"
+                                    const timeStr = dt.toTimeString().slice(0, 5);
 
                                     const isInSession = (
                                         (start < end && timeStr >= start && timeStr < end) ||
-                                        (start > end && (timeStr >= start || timeStr < end)) // ночная сессия
+                                        (start > end && (timeStr >= start || timeStr < end))
                                     );
 
                                     return isInSession ? d.index : null;
@@ -227,9 +257,9 @@ function generateHtml(filePath, sessionRanges, tradesPath, startTime, endTime, s
 
                         Object.entries(groupedByDate).forEach(([dateStr, dayData]) => {
                             const dateObj = new Date(dateStr);
-                            const dayOfWeek = dateObj.getDay(); // 0 = воскресенье, 6 = суббота
+                            const dayOfWeek = dateObj.getDay();
 
-                            if (dayOfWeek === 0 || dayOfWeek === 6) return; // Пропустить выходные
+                            if (dayOfWeek === 0 || dayOfWeek === 6) return;
 
                             const firstIndex = dayData[0].index;
                             const lastIndex = dayData[dayData.length - 1].index;
@@ -247,14 +277,12 @@ function generateHtml(filePath, sessionRanges, tradesPath, startTime, endTime, s
                                 .text(dateStr);
                         });
 
-
-
-                        // Trades rendering (двухцветный прямоугольник и RR)
+                        // Trades rendering (БЕЗ ИЗМЕНЕНИЙ)
                         trades.forEach(trade => {
-                            const entryIndex = data.findIndex(d => d.datetime === trade.entryTime);
-                            const exitIndex = data.findIndex(d => d.datetime === trade.exitTime);
+                            const entryIndex = indexMap.get(trade.entryTime);
+                            const exitIndex = indexMap.get(trade.exitTime);
 
-                            if (entryIndex === -1 || exitIndex === -1) return;
+                            if (entryIndex === undefined || exitIndex === undefined) return;
 
                             const xStart = x(entryIndex);
                             const xEnd = x(exitIndex) + x.bandwidth();
@@ -270,11 +298,9 @@ function generateHtml(filePath, sessionRanges, tradesPath, startTime, endTime, s
                             const yEntry = y(entryPrice);
                             const yExit = y(exitPrice);
 
-                            // Определяем верх и низ прямоугольника
                             let yTop = Math.min(yEntry, yExit);
                             let yBottom = Math.max(yEntry, yExit);
 
-                            // Если есть и SL, и TP — уточняем границы
                             const hasSL = typeof stopLoss === "number";
                             const hasTP = typeof takeProfit === "number";
 
@@ -290,7 +316,6 @@ function generateHtml(filePath, sessionRanges, tradesPath, startTime, endTime, s
                                 yBottom = Math.max(yBottom, yTP);
                             }
 
-                            // 🔳 Обводка вокруг всей сделки
                             g.append("rect")
                                 .attr("x", xStart)
                                 .attr("y", yTop)
@@ -300,7 +325,6 @@ function generateHtml(filePath, sessionRanges, tradesPath, startTime, endTime, s
                                 .attr("stroke", isProfit ? "green" : "red")
                                 .attr("stroke-width", 1);
 
-                            // 🌈 Заливка, если есть SL/TP
                             if (hasTP) {
                                 g.append("rect")
                                     .attr("x", xStart)
@@ -319,7 +343,6 @@ function generateHtml(filePath, sessionRanges, tradesPath, startTime, endTime, s
                                     .attr("fill", "rgba(255,0,0,0.2)");
                             }
 
-                            // ➖ Линия от entry до exit
                             g.append("line")
                                 .attr("x1", x(entryIndex) + x.bandwidth() / 2)
                                 .attr("y1", yEntry)
@@ -329,7 +352,6 @@ function generateHtml(filePath, sessionRanges, tradesPath, startTime, endTime, s
                                 .attr("stroke-width", 2)
                                 .attr("stroke-dasharray", "4 2");
 
-                            // 🏷️ Подпись типа сделки (LONG / SHORT)
                             g.append("text")
                                 .attr("x", xStart + rectWidth / 2)
                                 .attr("y", yTop - 5)
@@ -339,9 +361,8 @@ function generateHtml(filePath, sessionRanges, tradesPath, startTime, endTime, s
                                 .style("font-weight", "bold")
                                 .text(trade.direction);
 
-                            // 💬 RR-текст, только если SL и TP есть
                             if (hasSL && hasTP) {
-                            const rr = (Math.abs(takeProfit - entryPrice) / Math.abs(entryPrice - stopLoss)).toFixed(2);
+                                const rr = (Math.abs(takeProfit - entryPrice) / Math.abs(entryPrice - stopLoss)).toFixed(2);
                                 const rrLabel = \`1 : \${parseFloat(rr)}\`;
                                 const centerY = (yTop + yBottom) / 2;
 
@@ -356,11 +377,7 @@ function generateHtml(filePath, sessionRanges, tradesPath, startTime, endTime, s
                                     .text(rrLabel);
                             }
 
-                            // =====================================================
-                            // ➕ ПЛАНОВЫЕ ЛИНИИ (БЕЗ СПРЕДА) — НОВЫЙ БЛОК
-                            // =====================================================
-
-                            // 🔵 Плановый ENTRY
+                            // ➕ ПЛАНОВЫЕ ЛИНИИ
                             g.append("line")
                                 .attr("x1", xStart)
                                 .attr("x2", xEnd)
@@ -371,7 +388,6 @@ function generateHtml(filePath, sessionRanges, tradesPath, startTime, endTime, s
                                 .attr("stroke-dasharray", "3 3")
                                 .attr("opacity", 0.7);
 
-                            // 🟩 Плановый TAKE PROFIT
                             if (hasTP) {
                                 g.append("line")
                                     .attr("x1", xStart)
@@ -384,7 +400,6 @@ function generateHtml(filePath, sessionRanges, tradesPath, startTime, endTime, s
                                     .attr("opacity", 0.6);
                             }
 
-                            // 🟥 Плановый STOP LOSS
                             if (hasSL) {
                                 g.append("line")
                                     .attr("x1", xStart)
@@ -398,16 +413,13 @@ function generateHtml(filePath, sessionRanges, tradesPath, startTime, endTime, s
                             }
                         });
 
-                    
-
-
                     </script>
                 </body>
                 </html>
             `;
 
             fs.writeFileSync('./candlestick_chart.html', html);
-            console.log('✅ График успешно создан: candlestick_chart.html');
+            console.log('✅ Всё работает: и агрегация, и сделки');
         });
 }
 

@@ -198,19 +198,6 @@ for (let i = 0; i < candles.length; i++) {
     const [hh, mm] = timePart.split(":");
 /*
     if (mm !== "05" && mm !== "35") continue;
-    if (hh === "02") continue;
-    if (hh === "13") continue;
-    if (hh === "14") continue;
-    if (hh === "17") continue;
-    if (hh === "18") continue;
-    if (hh === "19") continue;
-    if (hh === "20") continue;
-    if (hh === "21") continue;
-    if (hh === "22") continue;
-    if (hh === "23") continue;
-*/
-
-    if (mm !== "05" && mm !== "35") continue;
 
 
     if (hh === "06") continue;
@@ -223,8 +210,26 @@ for (let i = 0; i < candles.length; i++) {
     if (hh === "21") continue;
     if (hh === "22") continue;
     if (hh === "23") continue;
+*/
+
+    if (mm !== "20" && mm !== "50") continue;
+    
+    if (hh === "00") continue;
+
+    if (hh === "02") continue;
+    if (hh === "03") continue;
     
 
+    if (hh === "14") continue;
+    if (hh === "15") continue;
+
+    if (hh === "17") continue;
+    if (hh === "18") continue;
+    if (hh === "19") continue;
+    if (hh === "20") continue;
+    if (hh === "21") continue;
+    if (hh === "22") continue;
+    if (hh === "23") continue;
 
     if (nextAllowedEntryTime && candle.time < nextAllowedEntryTime) {
       continue;
@@ -476,7 +481,6 @@ for (let i = 0; i < candles.length; i++) {
       avgEntryPrice: avgEntryPrice,
       maxDrawdownPercent: drawdownPercent(entryPrice1, minPrice1),
       maxUpBeforeThirdPercent: maxUpBeforeThird,
-      gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade),
       changePercent: changePercent
     });
 
@@ -499,7 +503,6 @@ for (let i = 0; i < candles.length; i++) {
         volumessum: volumessum,
         avgEntryPrice: avgEntryPrice,
         maxDrawdownPercent: drawdownPercent(entryPrice2, minPrice2),
-        gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade),
         changePercent: changePercent
       });
 
@@ -522,7 +525,6 @@ for (let i = 0; i < candles.length; i++) {
         volumessum: volumessum,
         avgEntryPrice: avgEntryPrice,
         maxDrawdownPercent: drawdownPercent(entryPrice3, minPrice3),
-        gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade),
         changePercent: changePercent
       });
 
@@ -545,7 +547,6 @@ for (let i = 0; i < candles.length; i++) {
         volumessum: volumessum,
         avgEntryPrice: avgEntryPrice,
         maxDrawdownPercent: drawdownPercent(entryPrice4, minPrice4),
-        gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade),
         changePercent: changePercent
       });
 

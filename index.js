@@ -55,17 +55,25 @@ async function runAll() {
   // generateSMA(sma3);
 
   await new Promise(resolve => setTimeout(resolve, 1000));
-  const startTimegenerate = new Date("2023-03-09 00:00:00");
+  const startTimegenerate = new Date("2023-03-08 00:00:00");
   //const startTimegenerate = new Date("2026-03-09 01:05:00");
-  const endTimegenerate = new Date("2027-03-11 00:00:00");
+  const endTimegenerate = new Date("2027-03-11 00:00:00"); 
+    
 
-const volumes = expo(500, 1.142, 1);
-const addPercents = expo(0.01, 1.54, 4.02);
+
+const volumes = expo(500, 1.67, 1);
+const addPercents = expo(0.02, 1.35, 3.8);
 //0.116231 ,0.116091, 0.117135 0.115358, ,0.116118
 //
 //1.7265
 /*
-  
+
+
+const volumes = expo(500, 1.67, 1);
+const addPercents = expo(0.02, 1.35, 3.8);
+
+const volumes = expo(500, 1.61, 1);
+const addPercents = expo(0.02, 1.41, 3.2);
 Gold
 const volumes = expo(190, 1.16, 1);
 const addPercents = expo(0.01, 1.123, 18.9);
@@ -114,13 +122,13 @@ const addPercents = expo(0.01, 1.55, 3.9);
     FOURTH_ADD_PERCENT,
     FIFTH_ADD_PERCENT
   ] = addPercents; 
-  const MIN_DROP_PERCENT1 = 0.505;
-  const MAX_DROP_PERCENT1 =  0.80;
-  const MIN_DROP_PERCENT2 = 1.22;
-  const MAX_DROP_PERCENT2 =  2;
+  const MIN_DROP_PERCENT1 = -2;
+  const MAX_DROP_PERCENT1 =  -0.37;
+  const MIN_DROP_PERCENT2 = 0.61;
+  const MAX_DROP_PERCENT2 = 2.4;
 
-  const LOOKBACK_HOURS2 = 2;
-  const takeprofit = 0.011;
+  const LOOKBACK_HOURS2 = 5;
+  const takeprofit = 0.0107;
   const config = {
     START_BALANCE: 0, 
     SPREAD: 0,
@@ -149,9 +157,12 @@ const addPercents = expo(0.01, 1.55, 3.9);
 //runAll(); 
 
 
-setTimeout(() => {    
-  const startTime = "2023-03-15 00:00:00";  
-  const endTime = "2027-12-15 00:00:00"; 
+setTimeout(() => {   
+  //const startTime = "2024-01-04 00:00:00";  
+  //const endTime = "2024-05-14 00:00:00";  
+  const startTime = "2023-03-08 00:00:00";  
+  //const startTime = "2025-02-02 07:50:00";  
+  const endTime = "2027-02-03 16:35:00";
   const datapath2 = datapath; 
   const runGeneration = require('./visualization/generation.js');
   //runGeneration(startTime, endTime, datapath2, sma1, sma2, sma3);
