@@ -56,7 +56,7 @@ function expoPercents(
 }
 
 
-const deposit = 935;
+const deposit = 990;
 //const deposit = 650;
 // ================= CONFIG =================
 const STRATEGY_CONFIG = {
@@ -76,6 +76,7 @@ const STRATEGY_CONFIG = {
     //takeProfitPercent: 0.32,
     leverage: 3.2,
     takeProfitPercent: 1.1,
+    //takeProfitPercent: 0.53,
   },
 
   deposit: deposit,

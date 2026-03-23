@@ -411,6 +411,132 @@ function generateHtml(filePath, sessionRanges, tradesPath, startTime, endTime, s
                                     .attr("stroke-dasharray", "6 3")
                                     .attr("opacity", 0.6);
                             }
+                                    // 🔥 ЛИНИЯ ЛИКВИДНОСТИ → ВХОД
+                            if (trade.liquidityLevel) {
+
+                                const liquidityIndex = indexMap.get(trade.liquidityLevel.time);
+
+                                if (liquidityIndex !== undefined) {
+
+                                    const x1 = x(liquidityIndex) + x.bandwidth() / 2;
+                                    const y1 = y(trade.liquidityLevel.price);
+
+                                    const x2 = x(entryIndex) + x.bandwidth() / 2;
+                                    const y2 = y(trade.liquidityLevel.price);
+
+                                    g.append("line")
+                                        .attr("x1", x1)
+                                        .attr("y1", y1)
+                                        .attr("x2", x2)
+                                        .attr("y2", y2)
+                                        .attr("stroke", "purple")
+                                        .attr("stroke-width", 2)
+                                        .attr("stroke-dasharray", "2 2")
+                                        .attr("opacity", 0.9);
+                                }
+                            }
+                            // 🟡 IMBALANCE ZONE
+                            if (trade.imbalanceLevel) {
+
+                                const imbalanceIndex = indexMap.get(trade.imbalanceLevel.time);
+
+                                if (imbalanceIndex !== undefined) {
+
+                                    const xStartImb = x(imbalanceIndex);
+                                    const xEndImb = x(entryIndex) + x.bandwidth();
+
+                                    const yTopImb = y(trade.imbalanceLevel.high);
+                                    const yBottomImb = y(trade.imbalanceLevel.low);
+
+                                    const height = Math.abs(yBottomImb - yTopImb);
+                                    const yRect = Math.min(yTopImb, yBottomImb);
+
+                                    // 🔥 ЗОНА IMBALANCE
+                                    g.append("rect")
+                                        .attr("x", xStartImb)
+                                        .attr("y", yRect)
+                                        .attr("width", xEndImb - xStartImb)
+                                        .attr("height", height)
+                                        .attr("fill", "rgba(255, 165, 0, 0.2)") // оранжевый
+                                        .attr("stroke", "orange")
+                                        .attr("stroke-width", 1)
+                                        .attr("opacity", 0.8);
+
+                                    // 🔸 MIDLINE (50% imbalance)
+                                    const mid = (trade.imbalanceLevel.high + trade.imbalanceLevel.low) / 2;
+
+                                    g.append("line")
+                                        .attr("x1", xStartImb)
+                                        .attr("x2", xEndImb)
+                                        .attr("y1", y(mid))
+                                        .attr("y2", y(mid))
+                                        .attr("stroke", "orange")
+                                        .attr("stroke-width", 1)
+                                        .attr("stroke-dasharray", "4 2")
+                                        .attr("opacity", 0.7);
+
+                                    // 🏷 LABEL
+                                    g.append("text")
+                                        .attr("x", xStartImb + 5)
+                                        .attr("y", yRect - 3)
+                                        .attr("fill", "orange")
+                                        .style("font-size", "10px")
+                                        .text("IMB");
+                                }
+                            }
+
+                            // 🟦 RANGE ZONE
+                            if (trade.range) {
+
+                                const fromIndex = indexMap.get(trade.range.fromTime);
+                                const toIndex = indexMap.get(trade.range.toTime);
+
+                                if (fromIndex !== undefined && toIndex !== undefined) {
+
+                                    const xStartRange = x(fromIndex);
+                                    const xEndRange = x(toIndex) + x.bandwidth();
+
+                                    const yTopRange = y(trade.range.high);
+                                    const yBottomRange = y(trade.range.low);
+
+                                    const height = Math.abs(yBottomRange - yTopRange);
+                                    const yRect = Math.min(yTopRange, yBottomRange);
+
+                                    // 🔥 САМА ЗОНА RANGE
+                                    g.append("rect")
+                                        .attr("x", xStartRange)
+                                        .attr("y", yRect)
+                                        .attr("width", xEndRange - xStartRange)
+                                        .attr("height", height)
+                                        .attr("fill", "rgba(0, 150, 255, 0.1)") // голубой полупрозрачный
+                                        .attr("stroke", "rgba(0, 150, 255, 0.6)")
+                                        .attr("stroke-width", 1)
+                                        .attr("stroke-dasharray", "3 3")
+                                        .attr("opacity", 0.7);
+
+                                    // 🔸 MID (по желанию, но очень полезно)
+                                    const mid = (trade.range.high + trade.range.low) / 2;
+
+                                    g.append("line")
+                                        .attr("x1", xStartRange)
+                                        .attr("x2", xEndRange)
+                                        .attr("y1", y(mid))
+                                        .attr("y2", y(mid))
+                                        .attr("stroke", "rgba(0, 150, 255, 0.8)")
+                                        .attr("stroke-width", 1)
+                                        .attr("stroke-dasharray", "4 2")
+                                        .attr("opacity", 0.6);
+
+                                    // 🏷 LABEL
+                                    g.append("text")
+                                        .attr("x", xStartRange + 5)
+                                        .attr("y", yRect - 3)
+                                        .attr("fill", "rgba(0, 150, 255, 0.9)")
+                                        .style("font-size", "10px")
+                                        .text("RANGE");
+                                }
+                            }
+                                                                
                         });
 
                     </script>

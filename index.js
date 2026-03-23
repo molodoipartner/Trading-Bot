@@ -55,14 +55,14 @@ async function runAll() {
   // generateSMA(sma3);
 
   await new Promise(resolve => setTimeout(resolve, 1000));
-  const startTimegenerate = new Date("2023-03-08 00:00:00");
-  //const startTimegenerate = new Date("2026-03-09 01:05:00");
-  const endTimegenerate = new Date("2027-03-11 00:00:00"); 
+  //const startTimegenerate = new Date("2022-03-23 00:00:00");
+    const startTimegenerate = new Date("2023-03-08 00:00:00");
+  const endTimegenerate = new Date("2027-01-30 16:35:00"); 
     
 
 
-const volumes = expo(500, 1.67, 1);
-const addPercents = expo(0.02, 1.35, 3.8);
+const volumes = expo(500, 1.142, 1);
+const addPercents = expo(0.01, 1.523, 4.19);
 //0.116231 ,0.116091, 0.117135 0.115358, ,0.116118
 //
 //1.7265
@@ -111,7 +111,7 @@ const addPercents = expo(0.01, 1.55, 3.9);
     VOLUME2,
     VOLUME3,
     VOLUME4,
-    VOLUME5
+    VOLUME5,
   ] = volumes;
   //const VOLUME4 = 0;
   //const VOLUME5 = 0;
@@ -122,13 +122,28 @@ const addPercents = expo(0.01, 1.55, 3.9);
     FOURTH_ADD_PERCENT,
     FIFTH_ADD_PERCENT
   ] = addPercents; 
-  const MIN_DROP_PERCENT1 = -2;
-  const MAX_DROP_PERCENT1 =  -0.37;
-  const MIN_DROP_PERCENT2 = 0.61;
-  const MAX_DROP_PERCENT2 = 2.4;
+  const MIN_DROP_PERCENT1 = 0.505;
+  const MAX_DROP_PERCENT1 =  0.8;
+  const MIN_DROP_PERCENT2 = 1.22;
+  const MAX_DROP_PERCENT2 = 2;
+//  const LOOKBACK_HOURS2 = 46;
+  const LOOKBACK_HOURS2 = 2;
+  const SWING_RANGE = 15;
+  const SWING_RANGE2 = 19;
+  const takeprofit = 0.011;
 
-  const LOOKBACK_HOURS2 = 5;
-  const takeprofit = 0.0107;
+  const volume_indexMIN = 0;
+  const volume_indexMAX = 1;
+  const volume_LOOKBACK = 24; 
+
+    const volume_indexMIN2 = 0;
+  const volume_indexMAX2 = 1;
+  const volume_LOOKBACK2 = 12; 
+
+    const volume_indexMIN3 = 0;
+  const volume_indexMAX3 = 1;
+  const volume_LOOKBACK3 = 48; 
+
   const config = {
     START_BALANCE: 0, 
     SPREAD: 0,
@@ -148,6 +163,17 @@ const addPercents = expo(0.01, 1.55, 3.9);
     MAX_DROP_PERCENT10: MAX_DROP_PERCENT1,
     MIN_DROP_PERCENT20: MIN_DROP_PERCENT2,
     MAX_DROP_PERCENT20: MAX_DROP_PERCENT2,
+    volume_indexMIN,
+    volume_indexMAX,
+    volume_LOOKBACK,
+    volume_indexMIN2,
+    volume_indexMAX2,
+    volume_LOOKBACK2,
+    volume_indexMIN3,
+    volume_indexMAX3,
+    volume_LOOKBACK3,
+    SWING_RANGE,
+    SWING_RANGE2,
     volumessum: volumessum,
     //Volumes: 500,675,911.25,1230.1875,1660.753125
   };
@@ -158,11 +184,10 @@ const addPercents = expo(0.01, 1.55, 3.9);
 
 
 setTimeout(() => {   
-  //const startTime = "2024-01-04 00:00:00";  
-  //const endTime = "2024-05-14 00:00:00";  
-  const startTime = "2023-03-08 00:00:00";  
-  //const startTime = "2025-02-02 07:50:00";  
-  const endTime = "2027-02-03 16:35:00";
+  const startTime = "2026-03-21 22:00:00"; 
+  //const startTime = "2026-01-19 22:00:00";
+  const endTime = "2027-01-21 22:00:00";
+
   const datapath2 = datapath; 
   const runGeneration = require('./visualization/generation.js');
   //runGeneration(startTime, endTime, datapath2, sma1, sma2, sma3);
@@ -220,8 +245,8 @@ calculateAveragePrice(
 
 
 
-/*
 
+/*
 const reverseExpo = require("./reverseSmoothExpo.js");
 
 const percents = [

@@ -27,6 +27,15 @@ const runMorningQuintupleLongStrategy = async (candles, config) => {
     MAX_DROP_PERCENT10,
     MIN_DROP_PERCENT20,
     MAX_DROP_PERCENT20,
+    volume_indexMIN,
+    volume_indexMAX,
+    volume_LOOKBACK,
+    volume_indexMIN2,
+    volume_indexMAX2,
+    volume_LOOKBACK2,
+    volume_indexMIN3,
+    volume_indexMAX3,
+    volume_LOOKBACK3,
     volumessum
   } = config;
 
@@ -71,13 +80,13 @@ const isPriceChangeInRange = (candles, currentIndex) => {
 
   // Определяем диапазон свечей для анализа
   const fromIndex = currentIndex - LOOKBACK_HOURS - 1;
-  const toIndex = currentIndex - 1;
+  const toIndex = currentIndex;
   //const toIndex = currentIndex;
 
   const slice = candles.slice(fromIndex, toIndex);
 
   const startCandle = slice[0];
-  const finishCandle = slice[slice.length - 1];
+  const finishCandle = slice[slice.length - 2];
 
   // Если свечей недостаточно
   if (!startCandle || !finishCandle) {
@@ -101,10 +110,10 @@ const isPriceChangeInRange = (candles, currentIndex) => {
     `📉 Проверка движения:\n` +
     `   🟢 Start candle: ${new Date(startCandle.time).toLocaleString()} | open = ${startCandle.open}\n` +
     `   🔴 Finish candle: ${new Date(finishCandle.time).toLocaleString()} | low = ${finishCandle.low}\n` +
-    `   📊 Падение: ${changePercent.toFixed(2)}%\n`
+    `   📊 Падение: ${changePercent.toFixed(2)}%`
   );
 
-console.log(`📊 Падение: ${changePercent.toFixed(2)}% ${new Date(startCandle.time).toLocaleString()}`)
+console.log(`📊 Падение: ${changePercent.toFixed(2)}% ${new Date(startCandle.time).toLocaleString()}\n`)
 */
 
   // Проверяем попадание в первую зону
@@ -124,60 +133,66 @@ console.log(`📊 Падение: ${changePercent.toFixed(2)}% ${new Date(startC
   };
 };
 
- 
-  
-const isPriceChangeInRange2 = (candles, currentIndex) => {
-  if (currentIndex < LOOKBACK_HOURS + 1) return false;
+const getVolatilityScore = (candles, currentIndex, lookback, maxP) => {
+  if (currentIndex < lookback + 1) return null;
 
-  const minPercent = MIN_DROP_PERCENT10;
-  const maxPercent = MAX_DROP_PERCENT10;
-
-  if (minPercent === 0 && maxPercent === 0) return true;
-
-  const fromIndex = currentIndex - LOOKBACK_HOURS - 1;
-  const toIndex = currentIndex - 1;
-  //const toIndex = currentIndex;
+  const fromIndex = currentIndex - lookback - 1;
+  const toIndex = currentIndex; 
 
   const slice = candles.slice(fromIndex, toIndex);
 
-  // 🔍 лог всех свечей, которые участвуют в проверке
-  /*
-  slice.forEach((candle, i) => {
-    console.log(
-      `[${fromIndex + i}] ${new Date(candle.time).toLocaleString()} | ` +
-      `O:${candle.open} H:${candle.high} L:${candle.low} C:${candle.close}`
-    );
-  });
-*/
-  const startCandle = slice[0];
-  const finishCandle = slice[1];
+  if (slice.length === 0) return null;
 
-  if (!startCandle || !finishCandle) {
-    console.warn("⚠️ Недостаточно свечей для расчёта");
-    return false;
+  const firstCandle = slice[0];
+  const lastCandle = slice[slice.length - 1];
+
+  // 🕒 текущая свеча (момент анализа)
+  const currentCandle = candles[currentIndex];
+
+  /*
+  console.log("🧠 === VOLATILITY DEBUG ===");
+  console.log(
+    `📍 Анализ на индексе: ${currentIndex} | время: ${new Date(currentCandle.time).toLocaleString()}`
+  );
+
+  console.log(
+    `📊 Диапазон индексов: [${fromIndex} → ${toIndex - 1}]`
+  );
+
+  console.log(
+    `🟢 Первая свеча:\n` +
+    `   индекс: ${fromIndex}\n` +
+    `   время: ${new Date(firstCandle.time).toLocaleString()}\n` +
+    `   O:${firstCandle.open} H:${firstCandle.high} L:${firstCandle.low} C:${firstCandle.close}`
+  );
+
+  console.log(
+    `🔴 Последняя свеча:\n` +
+    `   индекс: ${toIndex - 1}\n` +
+    `   время: ${new Date(lastCandle.time).toLocaleString()}\n` +
+    `   O:${lastCandle.open} H:${lastCandle.high} L:${lastCandle.low} C:${lastCandle.close}`
+  );
+
+  console.log(`📦 Кол-во свечей в анализе: ${slice.length}`);
+*/
+
+  let totalVol = 0;
+
+  for (const c of slice) {
+    totalVol += ((c.high - c.low) / c.open) * 100;
   }
 
-  const changePercent =
-    ((startCandle.open - finishCandle.low) / startCandle.open) * 100;
+  const avgVol = totalVol / slice.length;
+
+  // 🎯 нормализация: до 1 растёт, выше — просто 1
+  const score = Math.min(avgVol / maxP, 1);
   /*
-  console.log(
-    `📉 Проверка движения:\n` +
-    `   🟢 Start candle: ${new Date(startCandle.time).toLocaleString()} | open = ${startCandle.open}\n` +
-    `   🔴 Finish candle: ${new Date(finishCandle.time).toLocaleString()} | low = ${finishCandle.low}\n` +
-    `   📊 Падение: ${changePercent.toFixed(2)}%\n`
-  );
-*/
-//console.log(`📊 Падение: ${changePercent.toFixed(2)}% ${new Date(startCandle.time).toLocaleString()}`)
-/*
-  const absMin = Math.abs(minPercent);
-  const absMax = Math.abs(maxPercent);
-*/
-  const absMin = minPercent;
-  const absMax = maxPercent;
-
-  return changePercent >= absMin && changePercent <= absMax;
+  console.log(`📈 Avg Volatility: ${avgVol.toFixed(4)}%`);
+  console.log(`🎯 Score: ${score.toFixed(4)}`);
+  console.log("=====================================\n\n");
+  */
+  return score;
 };
-
 
 
 
@@ -212,15 +227,33 @@ for (let i = 0; i < candles.length; i++) {
     if (hh === "23") continue;
 */
 
-    if (mm !== "00" && mm !== "10" && mm !== "20" && mm !== "30" && mm !== "40" && mm !== "50") continue;
+    if (mm !== "00" && mm !== "05" && mm !== "10" && mm !== "15" && mm !== "20" && mm !== "25"
+      && mm !== "30" && mm !== "35" && mm !== "40" && mm !== "45" && mm !== "50" && mm !== "55") continue;
 
 
-
-
-
+    
     if (nextAllowedEntryTime && candle.time < nextAllowedEntryTime) {
       continue;
     }
+      const maxP = 2;
+      const volScore = getVolatilityScore(candles, i, volume_LOOKBACK, maxP);
+      if (volScore === null) continue;
+      if (volScore < volume_indexMIN || volScore > volume_indexMAX) {
+        continue;
+      }
+
+      const volScore2 = getVolatilityScore(candles, i, volume_LOOKBACK2, maxP);
+      if (volScore2 === null) continue;
+      if (volScore2 < volume_indexMIN2 || volScore2 > volume_indexMAX2) {
+        continue;
+      }
+
+      const volScore3 = getVolatilityScore(candles, i, volume_LOOKBACK3, maxP);
+      if (volScore3 === null) continue;
+      if (volScore3 < volume_indexMIN3 || volScore3 > volume_indexMAX3) {
+        continue;
+      }
+
 
     const { inRange, changePercent } = isPriceChangeInRange(candles, i);
 
@@ -468,8 +501,13 @@ for (let i = 0; i < candles.length; i++) {
       avgEntryPrice: avgEntryPrice,
       maxDrawdownPercent: drawdownPercent(entryPrice1, minPrice1),
       maxUpBeforeThirdPercent: maxUpBeforeThird,
-      gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade),
-      changePercent: changePercent
+      changePercent: changePercent,
+      volumeindex: volScore,
+      volumeindex2: volScore2,
+      volumeindex3: volScore3,
+      ...(fifthOpened && {
+        gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade),
+      }),
     });
 
     if (secondOpened)
@@ -491,7 +529,6 @@ for (let i = 0; i < candles.length; i++) {
         volumessum: volumessum,
         avgEntryPrice: avgEntryPrice,
         maxDrawdownPercent: drawdownPercent(entryPrice2, minPrice2),
-        gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade),
         changePercent: changePercent
       });
 
@@ -514,7 +551,6 @@ for (let i = 0; i < candles.length; i++) {
         volumessum: volumessum,
         avgEntryPrice: avgEntryPrice,
         maxDrawdownPercent: drawdownPercent(entryPrice3, minPrice3),
-        gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade),
         changePercent: changePercent
       });
 
@@ -537,7 +573,6 @@ for (let i = 0; i < candles.length; i++) {
         volumessum: volumessum,
         avgEntryPrice: avgEntryPrice,
         maxDrawdownPercent: drawdownPercent(entryPrice4, minPrice4),
-        gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade),
         changePercent: changePercent
       });
 
@@ -560,7 +595,6 @@ for (let i = 0; i < candles.length; i++) {
         volumessum: volumessum,
         avgEntryPrice: avgEntryPrice,
         maxDrawdownPercent: drawdownPercent(entryPrice5, minPrice5),
-        gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade),
         changePercent: changePercent
       });
   }

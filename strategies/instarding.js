@@ -27,13 +27,24 @@ const runMorningQuintupleLongStrategy = async (candles, config) => {
     MAX_DROP_PERCENT10,
     MIN_DROP_PERCENT20,
     MAX_DROP_PERCENT20,
+    volume_indexMIN,
+    volume_indexMAX,
+    volume_LOOKBACK,
+    volume_indexMIN2,
+    volume_indexMAX2,
+    volume_LOOKBACK2,
+    volume_indexMIN3,
+    volume_indexMAX3,
+    volume_LOOKBACK3,
+    SWING_RANGE,
+    SWING_RANGE2,
     volumessum
   } = config;
 
   const trades = [];
   const usedDates = new Set();
   
-  let nextAllowedEntryTime = null;
+  let isInPosition = false;
   const getNextHourTimestamp = (timeString) => {
     const date = new Date(timeString.replace(" ", "T") + "Z");
 
@@ -71,13 +82,13 @@ const isPriceChangeInRange = (candles, currentIndex) => {
 
   // Определяем диапазон свечей для анализа
   const fromIndex = currentIndex - LOOKBACK_HOURS - 1;
-  const toIndex = currentIndex - 1;
+  const toIndex = currentIndex;
   //const toIndex = currentIndex;
 
   const slice = candles.slice(fromIndex, toIndex);
 
   const startCandle = slice[0];
-  const finishCandle = slice[slice.length - 1];
+  const finishCandle = slice[slice.length - 2];
 
   // Если свечей недостаточно
   if (!startCandle || !finishCandle) {
@@ -89,23 +100,6 @@ const isPriceChangeInRange = (candles, currentIndex) => {
   const changePercent =
     ((startCandle.open - finishCandle.low) / startCandle.open) * 100;
 
-/*
-  slice.forEach((candle, i) => {
-    console.log(
-      `[${fromIndex + i}] ${new Date(candle.time).toLocaleString()} | ` +
-      `O:${candle.open} H:${candle.high} L:${candle.low} C:${candle.close}`
-    );
-  });
-
-  console.log(
-    `📉 Проверка движения:\n` +
-    `   🟢 Start candle: ${new Date(startCandle.time).toLocaleString()} | open = ${startCandle.open}\n` +
-    `   🔴 Finish candle: ${new Date(finishCandle.time).toLocaleString()} | low = ${finishCandle.low}\n` +
-    `   📊 Падение: ${changePercent.toFixed(2)}%\n`
-  );
-
-console.log(`📊 Падение: ${changePercent.toFixed(2)}% ${new Date(startCandle.time).toLocaleString()}`)
-*/
 
   // Проверяем попадание в первую зону
   const inRange1 =
@@ -117,68 +111,232 @@ console.log(`📊 Падение: ${changePercent.toFixed(2)}% ${new Date(startC
 
   // Если попало хотя бы в одну из зон
   const inRange = inRange1 || inRange2;
-
-  return {
-    inRange,
-    changePercent
-  };
-};
-
- 
-  
-const isPriceChangeInRange2 = (candles, currentIndex) => {
-  if (currentIndex < LOOKBACK_HOURS + 1) return false;
-
-  const minPercent = MIN_DROP_PERCENT10;
-  const maxPercent = MAX_DROP_PERCENT10;
-
-  if (minPercent === 0 && maxPercent === 0) return true;
-
-  const fromIndex = currentIndex - LOOKBACK_HOURS - 1;
-  const toIndex = currentIndex - 1;
-  //const toIndex = currentIndex;
-
-  const slice = candles.slice(fromIndex, toIndex);
-
-  // 🔍 лог всех свечей, которые участвуют в проверке
-  /*
+if(inRange){
   slice.forEach((candle, i) => {
     console.log(
       `[${fromIndex + i}] ${new Date(candle.time).toLocaleString()} | ` +
       `O:${candle.open} H:${candle.high} L:${candle.low} C:${candle.close}`
     );
   });
-*/
-  const startCandle = slice[0];
-  const finishCandle = slice[1];
 
-  if (!startCandle || !finishCandle) {
-    console.warn("⚠️ Недостаточно свечей для расчёта");
-    return false;
-  }
-
-  const changePercent =
-    ((startCandle.open - finishCandle.low) / startCandle.open) * 100;
-  /*
   console.log(
     `📉 Проверка движения:\n` +
     `   🟢 Start candle: ${new Date(startCandle.time).toLocaleString()} | open = ${startCandle.open}\n` +
     `   🔴 Finish candle: ${new Date(finishCandle.time).toLocaleString()} | low = ${finishCandle.low}\n` +
-    `   📊 Падение: ${changePercent.toFixed(2)}%\n`
+    `   📊 Падение: ${changePercent.toFixed(2)}%`
   );
-*/
-//console.log(`📊 Падение: ${changePercent.toFixed(2)}% ${new Date(startCandle.time).toLocaleString()}`)
-/*
-  const absMin = Math.abs(minPercent);
-  const absMax = Math.abs(maxPercent);
-*/
-  const absMin = minPercent;
-  const absMax = maxPercent;
 
-  return changePercent >= absMin && changePercent <= absMax;
+console.log(`📊 Падение: ${changePercent.toFixed(2)}% ${new Date(startCandle.time).toLocaleString()}\n`)
+
+}
+  return {
+    inRange,
+    changePercent
+  };
 };
 
+const isHaveWeCollectedLiquidity = (candles, currentIndex) => {
 
+  if (currentIndex < LOOKBACK_HOURS + Math.max(SWING_RANGE, SWING_RANGE2) + 2) {
+    return { canbeopened: false, liquidityLevel: null };
+  }
+
+  const fromIndex = currentIndex - LOOKBACK_HOURS;
+  const toIndex = currentIndex;
+
+  const slice = candles.slice(fromIndex, toIndex);
+
+  const startCandle = slice[0];
+  const finishCandle = slice[slice.length - 1];
+
+  if (!startCandle || !finishCandle) {
+    return { canbeopened: false, liquidityLevel: null };
+  }
+
+  let lowestLow = Infinity;
+  let lowestLowCandle = null;
+  let foundValidLow = false;
+
+  for (let j = SWING_RANGE; j < slice.length - 2 - SWING_RANGE2; j++) {
+
+    const candidate = slice[j];
+    const candidateLow = candidate.low;
+
+    let isValid = true;
+
+    // LEFT
+    for (let k = 1; k <= SWING_RANGE; k++) {
+      if (slice[j - k].low <= candidateLow) {
+        isValid = false;
+        break;
+      }
+    }
+
+    // RIGHT
+    if (isValid) {
+      for (let k = 1; k <= SWING_RANGE2; k++) {
+        if (slice[j + k].low <= candidateLow) {
+          isValid = false;
+          break;
+        }
+      }
+    }
+
+    // NOT BROKEN LATER
+    if (isValid) {
+      for (let k = j + 1; k < slice.length - 1; k++) {
+        if (slice[k].low <= candidateLow) {
+          isValid = false;
+          break;
+        }
+      }
+    }
+
+    if (isValid) {
+      foundValidLow = true;
+
+      if (candidateLow < lowestLow) {
+        lowestLow = candidateLow;
+        lowestLowCandle = candidate;
+      }
+    }
+  }
+
+  if (!foundValidLow || !lowestLowCandle) {
+    return { canbeopened: false, liquidityLevel: null };
+  }
+
+
+  const currentCandle = slice[slice.length - 1];
+
+  const isSweep = currentCandle.low < lowestLow;
+  const isReclaim = currentCandle.close > lowestLow;
+
+
+  const canbeopened = isSweep && isReclaim;
+
+  const liquidityLevel = {
+    price: lowestLow,
+    time: lowestLowCandle.time,
+    timeReadable: new Date(lowestLowCandle.time).toLocaleString()
+  };
+  // 🔹 RANGE
+  let rangeLow = Infinity;
+  let rangeHigh = -Infinity;
+
+  for (let i = 0; i < slice.length; i++) {
+    if (slice[i].low < rangeLow) rangeLow = slice[i].low;
+    if (slice[i].high > rangeHigh) rangeHigh = slice[i].high;
+  }
+  const range = {
+    fromTime: slice[0].time,
+    toTime: slice[slice.length - 1].time,
+    fromTimeReadable: new Date(slice[0].time).toLocaleString(),
+    toTimeReadable: new Date(slice[slice.length - 1].time).toLocaleString(),
+    low: rangeLow,
+    high: rangeHigh
+  };
+
+
+  // 🔥 ЛОГ ТОЛЬКО ПРИ ВХОДЕ
+  if (canbeopened) {
+
+    const checkTime = new Date(currentCandle.time).toLocaleString();
+
+    console.log(`
+==============================
+🟢 ENTRY SIGNAL
+
+🕒 Check time: ${checkTime}
+
+📊 SLICE:
+from: ${new Date(startCandle.time).toLocaleString()}
+to:   ${new Date(finishCandle.time).toLocaleString()}
+size: ${slice.length}
+
+📉 LIQUIDITY LEVEL:
+price: ${liquidityLevel.price}
+time:  ${liquidityLevel.timeReadable}
+
+📊 CURRENT CANDLE:
+time:  ${new Date(currentCandle.time).toLocaleString()}
+low:   ${currentCandle.low}
+close: ${currentCandle.close}
+
+✅ RESULT: ${canbeopened}
+==============================
+    `);
+  }
+
+
+
+  return {
+    canbeopened,
+    liquidityLevel,
+    range
+  };
+};
+
+const getVolatilityScore = (candles, currentIndex, lookback, maxP) => {
+  if (currentIndex < lookback + 1) return null;
+
+  const fromIndex = currentIndex - lookback - 1;
+  const toIndex = currentIndex; 
+
+  const slice = candles.slice(fromIndex, toIndex);
+
+  if (slice.length === 0) return null;
+
+  const firstCandle = slice[0];
+  const lastCandle = slice[slice.length - 1];
+
+  // 🕒 текущая свеча (момент анализа)
+  const currentCandle = candles[currentIndex];
+
+  /*
+  console.log("🧠 === VOLATILITY DEBUG ===");
+  console.log(
+    `📍 Анализ на индексе: ${currentIndex} | время: ${new Date(currentCandle.time).toLocaleString()}`
+  );
+
+  console.log(
+    `📊 Диапазон индексов: [${fromIndex} → ${toIndex - 1}]`
+  );
+
+  console.log(
+    `🟢 Первая свеча:\n` +
+    `   индекс: ${fromIndex}\n` +
+    `   время: ${new Date(firstCandle.time).toLocaleString()}\n` +
+    `   O:${firstCandle.open} H:${firstCandle.high} L:${firstCandle.low} C:${firstCandle.close}`
+  );
+
+  console.log(
+    `🔴 Последняя свеча:\n` +
+    `   индекс: ${toIndex - 1}\n` +
+    `   время: ${new Date(lastCandle.time).toLocaleString()}\n` +
+    `   O:${lastCandle.open} H:${lastCandle.high} L:${lastCandle.low} C:${lastCandle.close}`
+  );
+
+  console.log(`📦 Кол-во свечей в анализе: ${slice.length}`);
+*/
+
+  let totalVol = 0;
+
+  for (const c of slice) {
+    totalVol += ((c.high - c.low) / c.open) * 100;
+  }
+
+  const avgVol = totalVol / slice.length;
+
+  // 🎯 нормализация: до 1 растёт, выше — просто 1
+  const score = Math.min(avgVol / maxP, 1);
+  /*
+  console.log(`📈 Avg Volatility: ${avgVol.toFixed(4)}%`);
+  console.log(`🎯 Score: ${score.toFixed(4)}`);
+  console.log("=====================================\n\n");
+  */
+  return score;
+};
 
 
 
@@ -196,7 +354,7 @@ for (let i = 0; i < candles.length; i++) {
 
 
     const [hh, mm] = timePart.split(":");
-/*
+
     if (mm !== "05" && mm !== "35") continue;
 
 
@@ -210,36 +368,52 @@ for (let i = 0; i < candles.length; i++) {
     if (hh === "21") continue;
     if (hh === "22") continue;
     if (hh === "23") continue;
+
+    /*
+    if (mm !== "00" && mm !== "05" && mm !== "10" && mm !== "15" && mm !== "20" && mm !== "25"
+      && mm !== "30" && mm !== "35" && mm !== "40" && mm !== "45" && mm !== "50" && mm !== "55") continue;
 */
 
-    if (mm !== "20" && mm !== "50") continue;
-    
-    if (hh === "00") continue;
 
-    if (hh === "02") continue;
-    if (hh === "03") continue;
-    
-
-    if (hh === "14") continue;
-    if (hh === "15") continue;
-
-    if (hh === "17") continue;
-    if (hh === "18") continue;
-    if (hh === "19") continue;
-    if (hh === "20") continue;
-    if (hh === "21") continue;
-    if (hh === "22") continue;
-    if (hh === "23") continue;
-
-    if (nextAllowedEntryTime && candle.time < nextAllowedEntryTime) {
+    if (isInPosition) {
       continue;
     }
+      const maxP = 2;
+      const volScore = getVolatilityScore(candles, i, volume_LOOKBACK, maxP);
+      if (volScore === null) continue;
+      if (volScore < volume_indexMIN || volScore > volume_indexMAX) {
+        continue;
+      }
+
+      const volScore2 = getVolatilityScore(candles, i, volume_LOOKBACK2, maxP);
+      if (volScore2 === null) continue;
+      if (volScore2 < volume_indexMIN2 || volScore2 > volume_indexMAX2) {
+        continue;
+      }
+
+      const volScore3 = getVolatilityScore(candles, i, volume_LOOKBACK3, maxP);
+      if (volScore3 === null) continue;
+      if (volScore3 < volume_indexMIN3 || volScore3 > volume_indexMAX3) {
+        continue;
+      }
+
 
     const { inRange, changePercent } = isPriceChangeInRange(candles, i);
 
     if (!inRange) {
       continue;
     }
+
+
+
+
+      /*
+    //const { canbeopened, liquidityLevel, range } = isHaveWeCollectedLiquidity(candles, i);
+
+    if (!canbeopened) {
+      continue;
+    }
+*/
 
 
     usedDates.add(datePart);
@@ -289,6 +463,7 @@ for (let i = 0; i < candles.length; i++) {
     // === МИНИМУМ ВСЕЙ СДЕЛКИ ===
     let minPriceWholeTrade = entryPrice1;
     // ===== ПОИСК СОБЫТИЙ =====
+    isInPosition = true;
     for (let j = i + 1; j < candles.length; j++) {
       const c = candles[j];
 
@@ -424,8 +599,8 @@ for (let i = 0; i < candles.length; i++) {
     }
 
     if (!exitTime) break;
-    nextAllowedEntryTime = getNextHourTimestamp(exitTime);
-
+    //nextAllowedEntryTime = getNextHourTimestamp(exitTime);
+    isInPosition = false;
     i = exitIndex;
 
     const exitWithSpread = exitPrice - SPREAD / 2;
@@ -481,7 +656,15 @@ for (let i = 0; i < candles.length; i++) {
       avgEntryPrice: avgEntryPrice,
       maxDrawdownPercent: drawdownPercent(entryPrice1, minPrice1),
       maxUpBeforeThirdPercent: maxUpBeforeThird,
-      changePercent: changePercent
+      changePercent: changePercent,
+      volumeindex: volScore,
+      volumeindex2: volScore2,
+      volumeindex3: volScore3,
+      ...(fourthOpened && {
+        gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade),
+      }),
+      //liquidityLevel,
+      //range
     });
 
     if (secondOpened)
@@ -503,7 +686,6 @@ for (let i = 0; i < candles.length; i++) {
         volumessum: volumessum,
         avgEntryPrice: avgEntryPrice,
         maxDrawdownPercent: drawdownPercent(entryPrice2, minPrice2),
-        changePercent: changePercent
       });
 
     if (thirdOpened)
@@ -525,7 +707,6 @@ for (let i = 0; i < candles.length; i++) {
         volumessum: volumessum,
         avgEntryPrice: avgEntryPrice,
         maxDrawdownPercent: drawdownPercent(entryPrice3, minPrice3),
-        changePercent: changePercent
       });
 
     if (fourthOpened)
@@ -547,7 +728,6 @@ for (let i = 0; i < candles.length; i++) {
         volumessum: volumessum,
         avgEntryPrice: avgEntryPrice,
         maxDrawdownPercent: drawdownPercent(entryPrice4, minPrice4),
-        changePercent: changePercent
       });
 
     if (fifthOpened)
@@ -569,8 +749,6 @@ for (let i = 0; i < candles.length; i++) {
         volumessum: volumessum,
         avgEntryPrice: avgEntryPrice,
         maxDrawdownPercent: drawdownPercent(entryPrice5, minPrice5),
-        gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade),
-        changePercent: changePercent
       });
   }
 

@@ -358,7 +358,10 @@ for trade in trades:
         duration_hours = (exit_dt - entry_dt).total_seconds() / 3600
 
         change_percent = trade.get("changePercent", 0)
-        drawdown = trade.get("maxDrawdownPercent", 0)
+        gridDrawdownPercent = trade.get("gridDrawdownPercent", 0)
+        volumeIndex = trade.get("volumeindex", 0)
+        volumeIndex2 = trade.get("volumeindex2", 0)
+        volumeIndex3 = trade.get("volumeindex3", 0)
         up_before_third = trade.get("maxUpBeforeThirdPercent", None)
 
         trade_durations.append({
@@ -366,8 +369,11 @@ for trade in trades:
             "entryHour": entry_dt.strftime("%H:%M"),
             "hours": duration_hours,
             "changePercent": change_percent,
-            "drawdown": drawdown,
-            "upBeforeThird": up_before_third
+            "gridDrawdownPercent": gridDrawdownPercent,
+            "upBeforeThird": up_before_third,
+            "volumeIndex" : volumeIndex,
+            "volumeIndex2" : volumeIndex2,
+            "volumeIndex3" : volumeIndex3
         })
 
     except Exception as e:
@@ -411,8 +417,11 @@ for i, bar in enumerate(bars):
         f"{height:.2f}h\n"
         f"Open: {trade['entryHour']}\n"
         f"Δ: {trade['changePercent']:.2f}%\n"
-        f"DD: {trade['drawdown']:.2f}%\n"
-        f"UP: {up_text}"
+        f"GDD: {trade['gridDrawdownPercent']:.2f}%\n"
+        f"UP: {up_text}\n"
+        f"VOL: {trade['volumeIndex']:.2f}, "
+        f"VOL2: {trade['volumeIndex2']:.2f}, "
+        f"VOL3: {trade['volumeIndex3']:.2f}, "
     )
 
     plt.text(
@@ -432,23 +441,26 @@ plt.savefig(
 )
 
 plt.close()
+# ======================================================
+# === ТОП 10 САМЫХ БОЛЬШИХ ПРОСАДОК (GRID)
+# === (только positionNumber = 1)
+# ======================================================
 
-# ======================================================
-# === ВСЕ СДЕЛКИ: changePercent vs длительность
-# === цвет = длина сделки (positionNumber = 1)
-# ======================================================
-trade_points = []
+from datetime import datetime
+import matplotlib.pyplot as plt
+
+trade_durations = []
 
 for trade in trades:
 
+    # 👉 ФИЛЬТР ПО positionNumber
     if trade.get("positionNumber") != 1:
         continue
 
     entry_time = trade.get("entryTime")
     exit_time = trade.get("exitTime")
-    change_percent = trade.get("changePercent")
 
-    if not entry_time or not exit_time or change_percent is None:
+    if not entry_time or not exit_time:
         continue
 
     try:
@@ -457,120 +469,490 @@ for trade in trades:
 
         duration_hours = (exit_dt - entry_dt).total_seconds() / 3600
 
-        if duration_hours <= 0:
+        change_percent = trade.get("changePercent", 0)
+        gridDrawdownPercent = trade.get("gridDrawdownPercent")
+        volumeIndex = trade.get("volumeindex", 0)
+        volumeIndex2 = trade.get("volumeindex2", 0)
+        volumeIndex3 = trade.get("volumeindex3", 0)
+        up_before_third = trade.get("maxUpBeforeThirdPercent", None)
+
+        # 👉 пропускаем сделки без gridDrawdownPercent
+        if gridDrawdownPercent is None:
             continue
 
-        trade_points.append({
-            "changePercent": float(change_percent),
-            "hours": duration_hours
+        trade_durations.append({
+            "entryTime": entry_time,
+            "entryHour": entry_dt.strftime("%H:%M"),
+            "hours": duration_hours,
+            "changePercent": change_percent,
+            "gridDrawdownPercent": gridDrawdownPercent,
+            "upBeforeThird": up_before_third,
+            "volumeIndex": volumeIndex,
+            "volumeIndex2": volumeIndex2,
+            "volumeIndex3": volumeIndex3
         })
 
     except Exception as e:
-        print("Ошибка:", e)
+        print("Ошибка времени:", e)
 
 
-# === данные
-x = [t["changePercent"] for t in trade_points]
-y = [t["hours"] for t in trade_points]
+# === сортировка по ПРОСАДКЕ
+trade_durations_sorted = sorted(
+    trade_durations,
+    key=lambda x: x["gridDrawdownPercent"],
+    reverse=True
+)
 
-# === цвет
-colors = []
-for h in y:
-    if h <= 6:
-        colors.append("green")
-    elif h <= 24:
-        colors.append("orange")
-    else:
-        colors.append("red")
+# === топ 10
+top_trades = trade_durations_sorted[:10]
 
-# === сортировка
-x, y, colors = zip(*sorted(zip(x, y, colors)))
+labels = [str(i + 1) for i in range(len(top_trades))]
+drawdowns = [t["gridDrawdownPercent"] for t in top_trades]
 
-# === график
-plt.figure(figsize=(15, 7))
+plt.figure(figsize=(13, 7))
 
-plt.vlines(x, [0], y, alpha=0.15)
-plt.scatter(x, y, c=colors, alpha=0.6)
+# ❗ теперь высота = ПРОСАДКА
+bars = plt.bar(labels, drawdowns)
 
-plt.axhline(0)
+plt.title("TOP 10 самых больших просадок (gridDrawdownPercent) — positionNumber = 1")
+plt.xlabel("Ранг позиции")
+plt.ylabel("Просадка (%)")  # 👈 вот это ты хотел
 
-plt.title("Все сделки: где возникают длинные и короткие (positionNumber = 1)")
-plt.xlabel("changePercent (%)")
-plt.ylabel("Длительность (часы)")
-plt.xticks(np.arange(-5, 5.1, 0.20))
-plt.grid(True)
+plt.grid(axis="y")
 
 
-# ======================================================
-# === ПЛАВНЫЕ ЛИНИИ (KDE — как у тебя на первом скрине)
-# ======================================================
+# === подписи информации
+for i, bar in enumerate(bars):
 
-short_x = []
-long_x = []
+    trade = top_trades[i]
+    height = bar.get_height()
 
-for xi, yi in zip(x, y):
-    if yi <= 6:
-        short_x.append(xi)
-    elif yi >= 24:
-        long_x.append(xi)
+    up_text = "N/A"
+    if trade["upBeforeThird"] is not None:
+        up_text = f"{trade['upBeforeThird']:.2f}%"
 
-# диапазон X
-x_range = np.linspace(min(x), max(x), 300)
-
-# === короткие сделки (зелёная линия)
-if len(short_x) > 5:
-    kde_short = gaussian_kde(short_x)
-    y_short = kde_short(x_range)
-
-    # масштаб под график (ВАЖНО!)
-    y_short = y_short * max(y) * 0.4
-
-    plt.plot(
-        x_range,
-        y_short,
-        color="green",
-        linewidth=1,
-        alpha=0.7
+    text = (
+        f"{height:.2f}%\n"  # 👈 теперь это просадка
+        f"Open: {trade['entryHour']}\n"
+        f"Time: {trade['hours']:.2f}h\n"
+        f"Δ: {trade['changePercent']:.2f}%\n"
+        f"UP: {up_text}\n"
+        f"VOL: {trade['volumeIndex']:.2f}, "
+        f"VOL2: {trade['volumeIndex2']:.2f}, "
+        f"VOL3: {trade['volumeIndex3']:.2f}, "
     )
 
-# === длинные сделки (красная линия)
-if len(long_x) > 5:
-    kde_long = gaussian_kde(long_x)
-    y_long = kde_long(x_range)
-
-    y_long = y_long * max(y) * 0.7
-
-    plt.plot(
-        x_range,
-        y_long,
-        color="red",
-        linewidth=1,
-        alpha=0.7
+    plt.text(
+        bar.get_x() + bar.get_width() / 2,
+        height,
+        text,
+        ha="center",
+        va="bottom",
+        fontsize=9
     )
-
-
-# === легенда
-legend_elements = [
-    Line2D([0], [0], marker='o', color='w', label='Короткие (<6ч)',
-           markerfacecolor='green', markersize=8),
-    Line2D([0], [0], marker='o', color='w', label='Средние (6-24ч)',
-           markerfacecolor='orange', markersize=8),
-    Line2D([0], [0], marker='o', color='w', label='Длинные (>24ч)',
-           markerfacecolor='red', markersize=8),
-    Line2D([0], [0], color='green', lw=5, label='Плотность коротких'),
-    Line2D([0], [0], color='red', lw=5, label='Плотность длинных'),
-]
-
-plt.legend(handles=legend_elements)
 
 plt.tight_layout()
 
 plt.savefig(
-    "result/topresult/all_trades_duration_map.png",
+    "result/topresult/top_10_grid_drawdown_trades.png",
     dpi=150
 )
 
 plt.close()
+
+def plot_changepercent_duration(trades):
+
+    trade_points = []
+
+    for trade in trades:
+        if trade.get("positionNumber") != 1:
+            continue
+
+        try:
+            entry_dt = datetime.strptime(trade["entryTime"], "%Y-%m-%d %H:%M:%S")
+            exit_dt = datetime.strptime(trade["exitTime"], "%Y-%m-%d %H:%M:%S")
+
+            duration = (exit_dt - entry_dt).total_seconds() / 3600
+            if duration <= 0:
+                continue
+
+            trade_points.append({
+                "x": float(trade["changePercent"]),
+                "y": duration
+            })
+
+        except:
+            continue
+
+    if not trade_points:
+        print("Нет данных")
+        return
+
+    x = [t["x"] for t in trade_points]
+    y = [t["y"] for t in trade_points]
+
+    colors = ["green" if h <= 6 else "orange" if h <= 24 else "red" for h in y]
+    x, y, colors = zip(*sorted(zip(x, y, colors)))
+
+    plt.figure(figsize=(15, 7))
+    plt.vlines(x, [0], y, alpha=0.15)
+    plt.scatter(x, y, c=colors, alpha=0.6)
+
+    plt.title("changePercent vs duration")
+    plt.xlabel("changePercent")
+    plt.ylabel("Hours")
+    # === ШАГ ОСИ X (регулируешь тут)
+    step = 0.2  # 👈 меняй: 0.1 / 0.2 / 0.5
+
+    plt.xticks(np.arange(
+        round(min(x), 2),
+        round(max(x), 2) + step,
+        step
+    ))
+
+    plt.xticks(rotation=45)
+    plt.grid(True)
+
+    short_x = [xi for xi, yi in zip(x, y) if yi <= 6]
+    long_x  = [xi for xi, yi in zip(x, y) if yi >= 24]
+
+    x_range = np.linspace(min(x), max(x), 1000)
+
+    kde_short = gaussian_kde(short_x if len(short_x) > 1 else [0, 0.0001], bw_method=0.2)
+    kde_long  = gaussian_kde(long_x  if len(long_x) > 1 else [0, 0.0001], bw_method=0.2)
+
+    y_short = kde_short(x_range)
+    y_long  = kde_long(x_range)
+
+    y_short_scaled = y_short * max(y) * 0.4
+    y_long_scaled  = y_long  * max(y) * 0.7
+
+    plt.plot(x_range, y_short_scaled, color="green", alpha=0.7)
+    plt.plot(x_range, y_long_scaled,  color="red",   alpha=0.7)
+
+    # === EDGE
+    edge = (y_short_scaled - y_long_scaled) / (y_short_scaled + y_long_scaled + 1e-9)
+    edge_norm = (edge + 1) / 2
+    edge_scaled = edge_norm * max(y) * 0.8
+
+    plt.plot(x_range, edge_scaled, color="blue", linewidth=1, label="Edge")
+
+    # === EDGE С УЧЁТОМ КОЛИЧЕСТВА (🔥)
+    confidence = y_short_scaled + y_long_scaled
+    confidence_norm = confidence / (np.max(confidence) + 1e-9)
+
+    edge_weighted = edge_norm * confidence_norm
+    edge_weighted_scaled = edge_weighted * max(y) * 0.9
+
+    plt.plot(
+        x_range,
+        edge_weighted_scaled,
+        color="purple",
+        linewidth=1,
+        label="Edge (weighted)"
+    )
+
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig("result/topresult/all_trades_duration_map.png", dpi=150)
+    plt.close()
+
+
+
+def plot_volumeindex_duration(trades):
+
+    trade_points = []
+
+    for trade in trades:
+        if trade.get("positionNumber") != 1:
+            continue
+
+        try:
+            entry_dt = datetime.strptime(trade["entryTime"], "%Y-%m-%d %H:%M:%S")
+            exit_dt = datetime.strptime(trade["exitTime"], "%Y-%m-%d %H:%M:%S")
+
+            duration = (exit_dt - entry_dt).total_seconds() / 3600
+            if duration <= 0:
+                continue
+
+            trade_points.append({
+                "x": float(trade["volumeindex"]),
+                "y": duration
+            })
+
+        except:
+            continue
+
+    if not trade_points:
+        print("Нет данных")
+        return
+
+    x = [t["x"] for t in trade_points]
+    y = [t["y"] for t in trade_points]
+
+    colors = ["green" if h <= 6 else "orange" if h <= 24 else "red" for h in y]
+    x, y, colors = zip(*sorted(zip(x, y, colors)))
+
+    plt.figure(figsize=(15, 7))
+    plt.vlines(x, [0], y, alpha=0.15)
+    plt.scatter(x, y, c=colors, alpha=0.6)
+
+    plt.title("volumeIndex vs duration")
+    plt.xlabel("volumeIndex")
+    plt.ylabel("Hours")
+    # === ШАГ ОСИ X
+    step = 0.02  # 👈 меняй: 0.01 / 0.02 / 0.05
+
+    plt.xticks(np.arange(
+        round(min(x), 2),
+        round(max(x), 2) + step,
+        step
+    ))
+
+    plt.xticks(rotation=45)
+    plt.grid(True)
+
+    short_x = [xi for xi, yi in zip(x, y) if yi <= 6]
+    long_x  = [xi for xi, yi in zip(x, y) if yi >= 24]
+
+    x_range = np.linspace(min(x), max(x), 1000)
+
+    kde_short = gaussian_kde(short_x if len(short_x) > 1 else [0, 0.0001], bw_method=0.2)
+    kde_long  = gaussian_kde(long_x  if len(long_x) > 1 else [0, 0.0001], bw_method=0.2)
+
+    y_short = kde_short(x_range)
+    y_long  = kde_long(x_range)
+
+    y_short_scaled = y_short * max(y) * 0.4
+    y_long_scaled  = y_long  * max(y) * 0.7
+
+    plt.plot(x_range, y_short_scaled, color="green", alpha=0.7)
+    plt.plot(x_range, y_long_scaled,  color="red",   alpha=0.7)
+
+    # === EDGE
+    edge = (y_short_scaled - y_long_scaled) / (y_short_scaled + y_long_scaled + 1e-9)
+    edge_norm = (edge + 1) / 2
+    edge_scaled = edge_norm * max(y) * 0.8
+
+    plt.plot(x_range, edge_scaled, color="blue", linewidth=1, label="Edge")
+
+    # === EDGE С УЧЁТОМ КОЛИЧЕСТВА
+    confidence = y_short_scaled + y_long_scaled
+    confidence_norm = confidence / (np.max(confidence) + 1e-9)
+
+    edge_weighted = edge_norm * confidence_norm
+    edge_weighted_scaled = edge_weighted * max(y) * 0.9
+
+    plt.plot(
+        x_range,
+        edge_weighted_scaled,
+        color="purple",
+        linewidth=1,
+        label="Edge (weighted)"
+    )
+
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig("result/volume/all_trades24_volumeindex_map.png", dpi=150)
+    plt.close()
+def plot_volumeindex_duration2(trades):
+
+    trade_points = []
+
+    for trade in trades:
+        if trade.get("positionNumber") != 1:
+            continue
+
+        try:
+            entry_dt = datetime.strptime(trade["entryTime"], "%Y-%m-%d %H:%M:%S")
+            exit_dt = datetime.strptime(trade["exitTime"], "%Y-%m-%d %H:%M:%S")
+
+            duration = (exit_dt - entry_dt).total_seconds() / 3600
+            if duration <= 0:
+                continue
+
+            trade_points.append({
+                "x": float(trade["volumeindex2"]),
+                "y": duration
+            })
+
+        except:
+            continue
+
+    if not trade_points:
+        print("Нет данных")
+        return
+
+    x = [t["x"] for t in trade_points]
+    y = [t["y"] for t in trade_points]
+
+    colors = ["green" if h <= 6 else "orange" if h <= 24 else "red" for h in y]
+    x, y, colors = zip(*sorted(zip(x, y, colors)))
+
+    plt.figure(figsize=(15, 7))
+    plt.vlines(x, [0], y, alpha=0.15)
+    plt.scatter(x, y, c=colors, alpha=0.6)
+
+    plt.title("volumeIndex2 vs duration")
+    plt.xlabel("volumeIndex2")
+    plt.ylabel("Hours")
+    # === ШАГ ОСИ X
+    step = 0.02  # 👈 меняй: 0.01 / 0.02 / 0.05
+
+    plt.xticks(np.arange(
+        round(min(x), 2),
+        round(max(x), 2) + step,
+        step
+    ))
+
+    plt.xticks(rotation=45)
+    plt.grid(True)
+
+    short_x = [xi for xi, yi in zip(x, y) if yi <= 6]
+    long_x  = [xi for xi, yi in zip(x, y) if yi >= 24]
+
+    x_range = np.linspace(min(x), max(x), 1000)
+
+    kde_short = gaussian_kde(short_x if len(short_x) > 1 else [0, 0.0001], bw_method=0.2)
+    kde_long  = gaussian_kde(long_x  if len(long_x) > 1 else [0, 0.0001], bw_method=0.2)
+
+    y_short = kde_short(x_range)
+    y_long  = kde_long(x_range)
+
+    y_short_scaled = y_short * max(y) * 0.4
+    y_long_scaled  = y_long  * max(y) * 0.7
+
+    plt.plot(x_range, y_short_scaled, color="green", alpha=0.7)
+    plt.plot(x_range, y_long_scaled,  color="red",   alpha=0.7)
+
+    # === EDGE
+    edge = (y_short_scaled - y_long_scaled) / (y_short_scaled + y_long_scaled + 1e-9)
+    edge_norm = (edge + 1) / 2
+    edge_scaled = edge_norm * max(y) * 0.8
+
+    plt.plot(x_range, edge_scaled, color="blue", linewidth=1, label="Edge")
+
+    # === EDGE С УЧЁТОМ КОЛИЧЕСТВА
+    confidence = y_short_scaled + y_long_scaled
+    confidence_norm = confidence / (np.max(confidence) + 1e-9)
+
+    edge_weighted = edge_norm * confidence_norm
+    edge_weighted_scaled = edge_weighted * max(y) * 0.9
+
+    plt.plot(
+        x_range,
+        edge_weighted_scaled,
+        color="purple",
+        linewidth=1,
+        label="Edge (weighted)"
+    )
+
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig("result/volume/all_trades12_volumeindex_map.png", dpi=150)
+    plt.close()
+def plot_volumeindex_duration3(trades):
+
+    trade_points = []
+
+    for trade in trades:
+        if trade.get("positionNumber") != 1:
+            continue
+
+        try:
+            entry_dt = datetime.strptime(trade["entryTime"], "%Y-%m-%d %H:%M:%S")
+            exit_dt = datetime.strptime(trade["exitTime"], "%Y-%m-%d %H:%M:%S")
+
+            duration = (exit_dt - entry_dt).total_seconds() / 3600
+            if duration <= 0:
+                continue
+
+            trade_points.append({
+                "x": float(trade["volumeindex3"]),
+                "y": duration
+            })
+
+        except:
+            continue
+
+    if not trade_points:
+        print("Нет данных")
+        return
+
+    x = [t["x"] for t in trade_points]
+    y = [t["y"] for t in trade_points]
+
+    colors = ["green" if h <= 6 else "orange" if h <= 24 else "red" for h in y]
+    x, y, colors = zip(*sorted(zip(x, y, colors)))
+
+    plt.figure(figsize=(15, 7))
+    plt.vlines(x, [0], y, alpha=0.15)
+    plt.scatter(x, y, c=colors, alpha=0.6)
+
+    plt.title("volumeIndex3 vs duration")
+    plt.xlabel("volumeIndex3")
+    plt.ylabel("Hours")
+    # === ШАГ ОСИ X
+    step = 0.02  # 👈 меняй: 0.01 / 0.02 / 0.05
+
+    plt.xticks(np.arange(
+        round(min(x), 2),
+        round(max(x), 2) + step,
+        step
+    ))
+
+    plt.xticks(rotation=45)
+    plt.grid(True)
+
+    short_x = [xi for xi, yi in zip(x, y) if yi <= 6]
+    long_x  = [xi for xi, yi in zip(x, y) if yi >= 24]
+
+    x_range = np.linspace(min(x), max(x), 1000)
+
+    kde_short = gaussian_kde(short_x if len(short_x) > 1 else [0, 0.0001], bw_method=0.2)
+    kde_long  = gaussian_kde(long_x  if len(long_x) > 1 else [0, 0.0001], bw_method=0.2)
+
+    y_short = kde_short(x_range)
+    y_long  = kde_long(x_range)
+
+    y_short_scaled = y_short * max(y) * 0.4
+    y_long_scaled  = y_long  * max(y) * 0.7
+
+    plt.plot(x_range, y_short_scaled, color="green", alpha=0.7)
+    plt.plot(x_range, y_long_scaled,  color="red",   alpha=0.7)
+
+    # === EDGE
+    edge = (y_short_scaled - y_long_scaled) / (y_short_scaled + y_long_scaled + 1e-9)
+    edge_norm = (edge + 1) / 2
+    edge_scaled = edge_norm * max(y) * 0.8
+
+    plt.plot(x_range, edge_scaled, color="blue", linewidth=1, label="Edge")
+
+    # === EDGE С УЧЁТОМ КОЛИЧЕСТВА
+    confidence = y_short_scaled + y_long_scaled
+    confidence_norm = confidence / (np.max(confidence) + 1e-9)
+
+    edge_weighted = edge_norm * confidence_norm
+    edge_weighted_scaled = edge_weighted * max(y) * 0.9
+
+    plt.plot(
+        x_range,
+        edge_weighted_scaled,
+        color="purple",
+        linewidth=1,
+        label="Edge (weighted)"
+    )
+
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig("result/volume/all_trades48_volumeindex_map.png", dpi=150)
+    plt.close()
+
+plot_changepercent_duration(trades)
+plot_volumeindex_duration(trades)
+plot_volumeindex_duration2(trades)
+plot_volumeindex_duration3(trades)
+
 """
 
 # === 📅 Сделки по дням недели ===
@@ -779,7 +1161,7 @@ plt.tight_layout()
 plt.savefig("result/topresult/profit_by_time.png")
 plt.close()
 
-from datetime import datetime
+
 
 # === Инициализация ===
 duration_hour_stats = {str(h).zfill(2): {"total": 0, "duration_sum": 0.0, "duration_avg": 0.0} for h in range(24)}
