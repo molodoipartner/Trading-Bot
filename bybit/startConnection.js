@@ -378,7 +378,7 @@ function startStrategy() {
   strategyInterval = runEveryAligned(
     5 * 60 * 1000, // каждые 5 минут
     checkEthStrategy,
-    500           // +1 секунда после закрытия свечи
+    1000           // +1 секунда после закрытия свечи
   );
 }
 

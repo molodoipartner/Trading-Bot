@@ -205,6 +205,7 @@ const isHaveWeCollectedLiquidity = (candles, currentIndex) => {
   }
 
   if (!foundValidLow || !lowestLowCandle) {
+    console.log("No Valid Low found")
     return { canbeopened: false, liquidityLevel: null };
   }
 
@@ -241,7 +242,7 @@ const isHaveWeCollectedLiquidity = (candles, currentIndex) => {
 
   const fdss = false;
   // 🔥 ЛОГ ТОЛЬКО ПРИ ВХОДЕ
-  //if (canbeopened) {
+ // if (canbeopened && fdss) {
 
     const checkTime = new Date(candles[currentIndex].time).toLocaleString();
 
