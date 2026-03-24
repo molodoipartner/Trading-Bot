@@ -1,5 +1,7 @@
 const { BybitWSClient } = require("./ws/client");
 const { getLastTwoCandlesMoveETH } = require("./rest/marketData");
+const { getVolatilityScoreETH } = require("./rest/getVolatilityScoreETH");
+const { getLiquiditySweepETH } = require("./rest/getLiquiditySweepETH");
 const { openIsolatedLongLimit } = require("./rest/order");
 const { openIsolatedLongMarket } = require("./rest/marketorder");
 const { syncServerTime } = require("./rest/client");
@@ -59,11 +61,18 @@ function expoPercents(
 const deposit = 990;
 //const deposit = 650;
 // ================= CONFIG =================
+  const LOOKBACK_HOURS = 95;
+  const SWING_RANGE = 14;
+  const SWING_RANGE2 = 7;
+
+const volume_indexMIN2 = 0.103;
+const volume_indexMAX2 = 1;
+const volume_LOOKBACK2 = 12; 
 const STRATEGY_CONFIG = {
   //symbol: "XAUUSDT",
   symbol: "ETHUSDT",
-  //DISABLED_HOURS: [4, 5, 10, 11, 13, 14], // часы по серверному времени
-  DISABLED_HOURS: [6, 13, 14, 17, 18, 19, 20, 21, 22, 23], // часы по серверному времени    
+  DISABLED_HOURS: [8, 9, 14, 16], // часы по серверному времени
+  //DISABLED_HOURS: [6, 13, 14, 17, 18, 19, 20, 21, 22, 23], // часы по серверному времени    
   //minPercent: -0.157,
   //maxPercent: -0.267,
   minPercent: -0.505,
@@ -71,21 +80,23 @@ const STRATEGY_CONFIG = {
   minPercent2: -1.22,
   maxPercent2: -2,
 
+
   order: {
     //leverage: 10,
     //takeProfitPercent: 0.32,
-    leverage: 3.2,
-    takeProfitPercent: 1.1,
+    leverage: 3.5,
+    takeProfitPercent: 0.97,
     //takeProfitPercent: 0.53,
   },
 
   deposit: deposit,
 
-  volumes: expoVolumesFromTotal(deposit, 1.142, 1, 5),
-  addPercents: expoPercents(0.01, 1.54, 4.02, 5)
+  volumes: expoVolumesFromTotal(deposit, 1.195, 1, 5),
+  addPercents: expoPercents(0.01, 1.48, 4.22, 5)
   //volumes: expoVolumesFromTotal(deposit, 1.2, 1, 5),
   //addPercents: expoPercents(0.01, 1.11, 18, 5)
-
+    //volumes: expoVolumesFromTotal(deposit, 1.195, 1, 5),
+  //addPercents: expoPercents(0.01, 1.48, 4.22, 5)
   //const volumes = expo(500, 1.142, 1);
   //const addPercents = expo(0.01, 1.54, 4.02);
 };
@@ -118,6 +129,30 @@ async function checkEthStrategy() {
   try {
     console.log("⏱ Checking ETH strategy...");
 
+    const Volatilityresult = await getVolatilityScoreETH(volume_LOOKBACK2);
+    
+      if (Volatilityresult.score < volume_indexMIN2 || Volatilityresult.score > volume_indexMAX2) {
+        console.log(
+          `⛔ Volatility ${Volatilityresult}% out of ranges (${volume_indexMIN2}% .. ${volume_indexMAX2}%)`
+        );
+        console.log("❌ Strategy conditions not met");
+        return;
+      } else {
+        console.log("Volatility ✅", Volatilityresult);;
+      }
+
+      const result = await getLiquiditySweepETH(LOOKBACK_HOURS, SWING_RANGE, SWING_RANGE2);
+
+      if (!result.canbeopened) {
+        console.log("❌ No entry yet", result);
+        return
+      } 
+
+      // 🔥 вот твой сигнал
+      console.log("ENTRY READY", result);
+
+
+    /*
     const result = await getLastTwoCandlesMoveETH();
     console.log("ETH 2h move data:", result);
     console.log(
@@ -164,6 +199,7 @@ async function checkEthStrategy() {
     }
 
     console.log("✅ Strategy conditions met");
+    */
 
     const takeProfitPrice =
       result.endPrice + result.endPrice * (STRATEGY_CONFIG.order.takeProfitPercent / 100);
@@ -340,9 +376,9 @@ function startStrategy() {
   console.log("▶️ Strategy STARTED");
 
   strategyInterval = runEveryAligned(
-    30 * 60 * 1000,   // 30 минут
+    5 * 60 * 1000, // каждые 5 минут
     checkEthStrategy,
-    301 * 1000    // ⏱ +5 минут сдвиг
+    1000           // +1 секунда после закрытия свечи
   );
 }
 

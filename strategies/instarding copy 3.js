@@ -450,6 +450,17 @@ for (let i = 0; i < candles.length; i++) {
 
 
 
+    if (hh === "06") continue;
+    if (hh === "09") continue;
+    if (hh === "13") continue;
+    if (hh === "14") continue;
+    if (hh === "17") continue;
+    if (hh === "18") continue;
+    if (hh === "19") continue;
+    if (hh === "20") continue;
+    if (hh === "21") continue;
+    if (hh === "22") continue;
+    if (hh === "23") continue;
     if (isInPosition) {
       continue;
     }
@@ -479,8 +490,8 @@ for (let i = 0; i < candles.length; i++) {
       continue;
     }
 */
-const changePercent = 1;
-    const { canbeopened, liquidityLevel, imbalanceLevel, range } = isHaveWeCollectedLiquidity(candles, i);
+
+    const { canbeopened, liquidityLevel, range } = isHaveWeCollectedLiquidity(candles, i);
 
     if (!canbeopened) {
       continue;

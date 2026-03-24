@@ -155,7 +155,7 @@ else:
 
 if max_avg_drawdown is not None and trade_volume_sum != 0:
 
-    monthly_earnings = (100 / max_avg_drawdown) * (profit_to_volume_ratio / 36)
+    monthly_earnings = (100 / max_avg_drawdown) * (profit_to_volume_ratio / 48)
 
     monthly_earnings_display = f"{monthly_earnings:.4f}"
 

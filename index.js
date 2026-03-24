@@ -55,19 +55,20 @@ async function runAll() {
   // generateSMA(sma3);
 
   await new Promise(resolve => setTimeout(resolve, 1000));
-  //const startTimegenerate = new Date("2022-03-23 00:00:00");
-    const startTimegenerate = new Date("2023-03-08 00:00:00");
+  const startTimegenerate = new Date("2026-03-24 00:00:00");
+//const startTimegenerate = new Date("2026-03-12 00:00:00");
   const endTimegenerate = new Date("2027-01-30 16:35:00"); 
     
 
 
-const volumes = expo(500, 1.142, 1);
-const addPercents = expo(0.01, 1.523, 4.19);
+const volumes = expo(500, 1.195, 1);
+const addPercents = expo(0.01, 1.48, 4.22);
 //0.116231 ,0.116091, 0.117135 0.115358, ,0.116118
 //
 //1.7265
 /*
-
+const volumes = expo(500, 1.2, 1);
+const addPercents = expo(0.01, 1.48, 4.22);
 
 const volumes = expo(500, 1.67, 1);
 const addPercents = expo(0.02, 1.35, 3.8);
@@ -122,21 +123,25 @@ const addPercents = expo(0.01, 1.55, 3.9);
     FOURTH_ADD_PERCENT,
     FIFTH_ADD_PERCENT
   ] = addPercents; 
-  const MIN_DROP_PERCENT1 = 0.505;
-  const MAX_DROP_PERCENT1 =  0.8;
-  const MIN_DROP_PERCENT2 = 1.22;
-  const MAX_DROP_PERCENT2 = 2;
+  const MIN_DROP_PERCENT1 = -10;
+  const MAX_DROP_PERCENT1 =  20;
+  const MIN_DROP_PERCENT2 = 21;
+  const MAX_DROP_PERCENT2 = 22;
 //  const LOOKBACK_HOURS2 = 46;
-  const LOOKBACK_HOURS2 = 2;
-  const SWING_RANGE = 15;
-  const SWING_RANGE2 = 19;
-  const takeprofit = 0.011;
+  const LOOKBACK_HOURS2changePercent = 10;
+
+
+  const LOOKBACK_HOURS2 = 95;
+  const SWING_RANGE = 14;
+  const SWING_RANGE2 = 7;
+  const takeprofit = 0.0097;
 
   const volume_indexMIN = 0;
   const volume_indexMAX = 1;
-  const volume_LOOKBACK = 24; 
+  const volume_LOOKBACK = 40; 
 
-    const volume_indexMIN2 = 0;
+    //const volume_indexMIN2 = 0.11;
+  const volume_indexMIN2 = 0.103;
   const volume_indexMAX2 = 1;
   const volume_LOOKBACK2 = 12; 
 
@@ -159,6 +164,7 @@ const addPercents = expo(0.01, 1.55, 3.9);
     FIFTH_ADD_PERCENT,
     MIN_MINUTES_BETWEEN_FIRST_AND_THIRD: 0,
     LOOKBACK_HOURS: LOOKBACK_HOURS2,
+    LOOKBACK_HOURS2changePercent,
     MIN_DROP_PERCENT10: MIN_DROP_PERCENT1,
     MAX_DROP_PERCENT10: MAX_DROP_PERCENT1,
     MIN_DROP_PERCENT20: MIN_DROP_PERCENT2,
@@ -184,9 +190,9 @@ const addPercents = expo(0.01, 1.55, 3.9);
 
 
 setTimeout(() => {   
-  const startTime = "2026-03-21 22:00:00"; 
+  const startTime = "2026-03-23 00:00:00"; 
   //const startTime = "2026-01-19 22:00:00";
-  const endTime = "2027-01-21 22:00:00";
+  const endTime = "2027-01-31 00:35:00";
 
   const datapath2 = datapath; 
   const runGeneration = require('./visualization/generation.js');

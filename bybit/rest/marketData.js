@@ -1,11 +1,7 @@
 const { publicRequest } = require("./client");
 
 /**
- * ETH — движение цены
- * ⚠️ ЛОГИКА 1-в-1 как в бэктесте:
- * - 5m свечи
- * - берём 2 последние ЗАКРЫТЫЕ свечи
- * - сравнение: open первой → low второй
+
  */
 async function getLastTwoCandlesMoveETH() {
   console.log("Fetching last 2 closed candles move for ETH...");

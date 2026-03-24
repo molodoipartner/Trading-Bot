@@ -23,6 +23,7 @@ const runMorningQuintupleLongStrategy = async (candles, config) => {
     FIFTH_ADD_PERCENT,
     MIN_MINUTES_BETWEEN_FIRST_AND_THIRD,
     LOOKBACK_HOURS,
+    LOOKBACK_HOURS2changePercent,
     MIN_DROP_PERCENT10,
     MAX_DROP_PERCENT10,
     MIN_DROP_PERCENT20,
@@ -60,7 +61,7 @@ const runMorningQuintupleLongStrategy = async (candles, config) => {
 const isPriceChangeInRange = (candles, currentIndex) => {
 
   // Проверяем что свечей достаточно для lookback
-  if (currentIndex < LOOKBACK_HOURS + 1) {
+  if (currentIndex < LOOKBACK_HOURS2changePercent + 1) {
     return { inRange: false, changePercent: null };
   }
 
@@ -81,7 +82,7 @@ const isPriceChangeInRange = (candles, currentIndex) => {
   }
 
   // Определяем диапазон свечей для анализа
-  const fromIndex = currentIndex - LOOKBACK_HOURS - 1;
+  const fromIndex = currentIndex - LOOKBACK_HOURS2changePercent - 1;
   const toIndex = currentIndex;
   //const toIndex = currentIndex;
 
@@ -111,7 +112,8 @@ const isPriceChangeInRange = (candles, currentIndex) => {
 
   // Если попало хотя бы в одну из зон
   const inRange = inRange1 || inRange2;
-if(inRange){
+  const hjdk = false;
+if(inRange && hjdk){
   slice.forEach((candle, i) => {
     console.log(
       `[${fromIndex + i}] ${new Date(candle.time).toLocaleString()} | ` +
@@ -237,11 +239,11 @@ const isHaveWeCollectedLiquidity = (candles, currentIndex) => {
     high: rangeHigh
   };
 
-
+  const fdss = false;
   // 🔥 ЛОГ ТОЛЬКО ПРИ ВХОДЕ
-  if (canbeopened) {
+  //if (canbeopened) {
 
-    const checkTime = new Date(currentCandle.time).toLocaleString();
+    const checkTime = new Date(candles[currentIndex].time).toLocaleString();
 
     console.log(`
 ==============================
@@ -266,7 +268,7 @@ close: ${currentCandle.close}
 ✅ RESULT: ${canbeopened}
 ==============================
     `);
-  }
+ // }
 
 
 
@@ -293,7 +295,7 @@ const getVolatilityScore = (candles, currentIndex, lookback, maxP) => {
   // 🕒 текущая свеча (момент анализа)
   const currentCandle = candles[currentIndex];
 
-  /*
+/*
   console.log("🧠 === VOLATILITY DEBUG ===");
   console.log(
     `📍 Анализ на индексе: ${currentIndex} | время: ${new Date(currentCandle.time).toLocaleString()}`
@@ -318,8 +320,8 @@ const getVolatilityScore = (candles, currentIndex, lookback, maxP) => {
   );
 
   console.log(`📦 Кол-во свечей в анализе: ${slice.length}`);
-*/
 
+*/
   let totalVol = 0;
 
   for (const c of slice) {
@@ -330,14 +332,13 @@ const getVolatilityScore = (candles, currentIndex, lookback, maxP) => {
 
   // 🎯 нормализация: до 1 растёт, выше — просто 1
   const score = Math.min(avgVol / maxP, 1);
-  /*
-  console.log(`📈 Avg Volatility: ${avgVol.toFixed(4)}%`);
-  console.log(`🎯 Score: ${score.toFixed(4)}`);
+/*
+  console.log(`📈 Avg Volatility: ${avgVol}%`);
+  console.log(`🎯 Score: ${score}`);
   console.log("=====================================\n\n");
-  */
+*/
   return score;
 };
-
 
 
 
@@ -354,7 +355,7 @@ for (let i = 0; i < candles.length; i++) {
 
 
     const [hh, mm] = timePart.split(":");
-
+    /*
     if (mm !== "05" && mm !== "35") continue;
 
 
@@ -368,52 +369,70 @@ for (let i = 0; i < candles.length; i++) {
     if (hh === "21") continue;
     if (hh === "22") continue;
     if (hh === "23") continue;
+*/
 
-    /*
     if (mm !== "00" && mm !== "05" && mm !== "10" && mm !== "15" && mm !== "20" && mm !== "25"
       && mm !== "30" && mm !== "35" && mm !== "40" && mm !== "45" && mm !== "50" && mm !== "55") continue;
-*/
+
+
+    if (hh === "08") continue;
+    if (hh === "09") continue;
+
+    if (hh === "14") continue;
+    if (hh === "16") continue;
+
+
+
+
+
+
+
+
+
 
 
     if (isInPosition) {
       continue;
     }
       const maxP = 2;
+      /*
       const volScore = getVolatilityScore(candles, i, volume_LOOKBACK, maxP);
       if (volScore === null) continue;
       if (volScore < volume_indexMIN || volScore > volume_indexMAX) {
         continue;
       }
-
+*/
       const volScore2 = getVolatilityScore(candles, i, volume_LOOKBACK2, maxP);
       if (volScore2 === null) continue;
       if (volScore2 < volume_indexMIN2 || volScore2 > volume_indexMAX2) {
         continue;
       }
-
+/*
       const volScore3 = getVolatilityScore(candles, i, volume_LOOKBACK3, maxP);
       if (volScore3 === null) continue;
       if (volScore3 < volume_indexMIN3 || volScore3 > volume_indexMAX3) {
         continue;
       }
+*/
 
 
+
+
+    const { canbeopened, liquidityLevel, range } = isHaveWeCollectedLiquidity(candles, i);
+
+    if (!canbeopened) {
+      continue;
+    }
+
+/*
     const { inRange, changePercent } = isPriceChangeInRange(candles, i);
 
     if (!inRange) {
       continue;
     }
-
-
-
-
-      /*
-    //const { canbeopened, liquidityLevel, range } = isHaveWeCollectedLiquidity(candles, i);
-
-    if (!canbeopened) {
-      continue;
-    }
 */
+
+
 
 
     usedDates.add(datePart);
@@ -656,15 +675,15 @@ for (let i = 0; i < candles.length; i++) {
       avgEntryPrice: avgEntryPrice,
       maxDrawdownPercent: drawdownPercent(entryPrice1, minPrice1),
       maxUpBeforeThirdPercent: maxUpBeforeThird,
-      changePercent: changePercent,
-      volumeindex: volScore,
+      //changePercent: changePercent,
+      //volumeindex: volScore,
       volumeindex2: volScore2,
-      volumeindex3: volScore3,
+      //volumeindex3: volScore3,
       ...(fourthOpened && {
         gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade),
       }),
-      //liquidityLevel,
-      //range
+      liquidityLevel,
+      range
     });
 
     if (secondOpened)
