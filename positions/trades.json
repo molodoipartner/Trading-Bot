@@ -1,1 +1,126 @@
-[]
+[
+  {
+    "entryTime": "2026-03-24 01:45:00",
+    "entryPrice": 2129.73,
+    "entryPriceWithSpread": 2129.73,
+    "takeProfit": 2150.388381,
+    "exitTime": "2026-03-24 04:05:00",
+    "tradeDuration": "02:20:00",
+    "exitPrice": 2150.388381,
+    "exitPriceWithSpread": 2150.388381,
+    "direction": "LONG",
+    "phase": "GRID",
+    "result": "TAKE",
+    "volume": 500,
+    "profitQuoted": 4.85000000000008,
+    "spreadUsed": 0,
+    "positionNumber": 1,
+    "volumessum": 3684.385138,
+    "avgEntryPrice": null,
+    "maxDrawdownPercent": 0.03286801613349195,
+    "maxUpBeforeThirdPercent": null,
+    "volumeindex2": 0.1601940219024348,
+    "liquidityLevel": {
+      "price": 2128.91,
+      "time": "2026-03-24 00:35:00",
+      "timeReadable": "24.03.2026, 00:35:00"
+    },
+    "range": {
+      "fromTime": "2026-03-23 17:50:00",
+      "toTime": "2026-03-24 01:40:00",
+      "fromTimeReadable": "23.03.2026, 17:50:00",
+      "toTimeReadable": "24.03.2026, 01:40:00",
+      "low": 2122.67,
+      "high": 2180
+    }
+  },
+  {
+    "entryTime": "2026-03-24 17:05:00",
+    "entryPrice": 2119.95,
+    "entryPriceWithSpread": 2119.95,
+    "takeProfit": 2140.513515,
+    "exitTime": "2026-03-24 20:20:00",
+    "tradeDuration": "03:15:00",
+    "exitPrice": 2140.513515,
+    "exitPriceWithSpread": 2140.513515,
+    "direction": "LONG",
+    "phase": "GRID",
+    "result": "TAKE",
+    "volume": 500,
+    "profitQuoted": 4.85000000000008,
+    "spreadUsed": 0,
+    "positionNumber": 1,
+    "volumessum": 3684.385138,
+    "avgEntryPrice": null,
+    "maxDrawdownPercent": 0.8467180829736465,
+    "maxUpBeforeThirdPercent": null,
+    "volumeindex2": 0.1516863050350184,
+    "liquidityLevel": {
+      "price": 2118.52,
+      "time": "2026-03-24 14:50:00",
+      "timeReadable": "24.03.2026, 14:50:00"
+    },
+    "range": {
+      "fromTime": "2026-03-24 09:10:00",
+      "toTime": "2026-03-24 17:00:00",
+      "fromTimeReadable": "24.03.2026, 09:10:00",
+      "toTimeReadable": "24.03.2026, 17:00:00",
+      "low": 2118.08,
+      "high": 2175
+    }
+  },
+  {
+    "entryTime": "2026-03-27 12:40:00",
+    "entryPrice": 1986.51,
+    "entryPriceWithSpread": 1986.51,
+    "takeProfit": 2005.779147,
+    "exitTime": "2026-03-27 15:20:00",
+    "tradeDuration": "02:40:00",
+    "exitPrice": 1994.8593015300003,
+    "exitPriceWithSpread": 1994.8593015300003,
+    "direction": "LONG",
+    "phase": "GRID",
+    "result": "TAKE",
+    "volume": 500,
+    "profitQuoted": 2.101500000000044,
+    "spreadUsed": 0,
+    "positionNumber": 1,
+    "volumessum": 3684.385138,
+    "avgEntryPrice": 1975.6950594533032,
+    "maxDrawdownPercent": 1.0697152292210963,
+    "maxUpBeforeThirdPercent": null,
+    "volumeindex2": 0.11550316845933771,
+    "liquidityLevel": {
+      "price": 1980.27,
+      "time": "2026-03-27 11:00:00",
+      "timeReadable": "27.03.2026, 11:00:00"
+    },
+    "range": {
+      "fromTime": "2026-03-27 04:45:00",
+      "toTime": "2026-03-27 12:35:00",
+      "fromTimeReadable": "27.03.2026, 04:45:00",
+      "toTimeReadable": "27.03.2026, 12:35:00",
+      "low": 1979.7,
+      "high": 2071.88
+    }
+  },
+  {
+    "entryTime": "2026-03-27 13:35:00",
+    "entryPrice": 1966.6449,
+    "entryPriceWithSpread": 1966.6449,
+    "takeProfit": 2005.779147,
+    "exitTime": "2026-03-27 15:20:00",
+    "exitPrice": 1994.8593015300003,
+    "exitPriceWithSpread": 1994.8593015300003,
+    "direction": "LONG",
+    "phase": "GRID",
+    "result": "TAKE",
+    "volume": 597.5,
+    "profitQuoted": 8.572012626262676,
+    "spreadUsed": 0,
+    "positionNumber": 2,
+    "volumessum": 3684.385138,
+    "avgEntryPrice": 1975.6950594533032,
+    "maxDrawdownPercent": 0
+  }
+]

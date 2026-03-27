@@ -55,7 +55,7 @@ async function runAll() {
   // generateSMA(sma3);
 
   await new Promise(resolve => setTimeout(resolve, 1000));
-  const startTimegenerate = new Date("2026-03-24 03:00:00");
+  const startTimegenerate = new Date("2026-03-23 16:00:00");
 //const startTimegenerate = new Date("2026-03-12 00:00:00");
   const endTimegenerate = new Date("2027-01-30 16:35:00"); 
     
@@ -190,7 +190,7 @@ const addPercents = expo(0.01, 1.55, 3.9);
 
 
 setTimeout(() => {   
-  const startTime = "2026-03-24 03:00:00"; 
+  const startTime = "2026-03-27 00:00:00"; 
   //const startTime = "2026-01-19 22:00:00";
   const endTime = "2027-01-31 00:35:00";
 

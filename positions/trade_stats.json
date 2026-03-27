@@ -1,17 +1,17 @@
 {
-  "totalTrades": 0,
-  "profitableTrades": 0,
+  "totalTrades": 4,
+  "profitableTrades": 4,
   "losingTrades": 0,
   "noneTrades": 0,
-  "longTrades": 0,
+  "longTrades": 4,
   "shortTrades": 0,
-  "totalProfitQuoted": 0,
-  "averageProfitQuoted": 0,
-  "maxProfitQuoted": null,
-  "maxLossQuoted": null,
+  "totalProfitQuoted": 20.37,
+  "averageProfitQuoted": 5.09,
+  "maxProfitQuoted": 8.572012626262676,
+  "maxLossQuoted": 2.101500000000044,
   "startBalance": 0,
-  "finalBalance": 0,
-  "totalDaysInData": 1,
-  "winRate": 0,
-  "averageTradesPerDay": 0
+  "finalBalance": 20.37,
+  "totalDaysInData": 5,
+  "winRate": 100,
+  "averageTradesPerDay": 0.8
 }

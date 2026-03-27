@@ -58,7 +58,7 @@ function expoPercents(
 }
 
 
-const deposit = 990;
+const deposit = 1003;
 //const deposit = 650;
 // ================= CONFIG =================
   const LOOKBACK_HOURS = 95;
@@ -84,7 +84,7 @@ const STRATEGY_CONFIG = {
   order: {
     //leverage: 10,
     //takeProfitPercent: 0.32,
-    leverage: 3.5,
+    leverage: 3.7,
     takeProfitPercent: 0.97,
     //takeProfitPercent: 0.53,
   },

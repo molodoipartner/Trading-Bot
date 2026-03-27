@@ -406,6 +406,7 @@ for (let i = 0; i < candles.length; i++) {
       const volScore2 = getVolatilityScore(candles, i, volume_LOOKBACK2, maxP);
       if (volScore2 === null) continue;
       if (volScore2 < volume_indexMIN2 || volScore2 > volume_indexMAX2) {
+        console.log("Out ofrange Volatility")
         continue;
       }
 /*
