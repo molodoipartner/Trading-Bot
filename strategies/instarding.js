@@ -205,7 +205,7 @@ const isHaveWeCollectedLiquidity = (candles, currentIndex) => {
   }
 
   if (!foundValidLow || !lowestLowCandle) {
-    console.log("No Valid Low found")
+    //console.log("No Valid Low found")
     return { canbeopened: false, liquidityLevel: null };
   }
 
@@ -245,7 +245,7 @@ const isHaveWeCollectedLiquidity = (candles, currentIndex) => {
  // if (canbeopened && fdss) {
 
     const checkTime = new Date(candles[currentIndex].time).toLocaleString();
-
+/*
     console.log(`
 ==============================
 🟢 ENTRY SIGNAL
@@ -269,8 +269,8 @@ close: ${currentCandle.close}
 ✅ RESULT: ${canbeopened}
 ==============================
     `);
- // }
 
+*/
 
 
   return {
@@ -376,12 +376,22 @@ for (let i = 0; i < candles.length; i++) {
       && mm !== "30" && mm !== "35" && mm !== "40" && mm !== "45" && mm !== "50" && mm !== "55") continue;
 
 
-    if (hh === "08") continue;
-    if (hh === "09") continue;
-
-    if (hh === "14") continue;
-    if (hh === "16") continue;
-
+    if (hh === "08") {
+      //console.log("Wrong time 8");
+      continue
+    };
+    if (hh === "09") {
+      //console.log("Wrong time 9");
+      continue
+    };
+    if (hh === "14") {
+      //console.log("Wrong time 14");
+      continue
+    };
+    if (hh === "16") {
+      //console.log("Wrong time 16");
+      continue
+    };
 
 
 
@@ -406,7 +416,7 @@ for (let i = 0; i < candles.length; i++) {
       const volScore2 = getVolatilityScore(candles, i, volume_LOOKBACK2, maxP);
       if (volScore2 === null) continue;
       if (volScore2 < volume_indexMIN2 || volScore2 > volume_indexMAX2) {
-        console.log("Out ofrange Volatility")
+        //console.log("Out ofrange Volatility")
         continue;
       }
 /*

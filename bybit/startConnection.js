@@ -136,9 +136,10 @@ async function checkEthStrategy() {
           `⛔ Volatility ${Volatilityresult}% out of ranges (${volume_indexMIN2}% .. ${volume_indexMAX2}%)`
         );
         console.log("❌ Strategy conditions not met");
+        console.log("Volatility", Volatilityresult);
         return;
       } else {
-        console.log("Volatility ✅", Volatilityresult);;
+        console.log("Volatility ✅", Volatilityresult);
       }
 
       const result = await getLiquiditySweepETH(LOOKBACK_HOURS, SWING_RANGE, SWING_RANGE2);
