@@ -168,7 +168,7 @@ const isHaveWeCollectedLiquidity = (candles, currentIndex) => {
 
     // LEFT
     for (let k = 1; k <= SWING_RANGE; k++) {
-      if (slice[j - k].low <= candidateLow) {
+      if (slice[j - k].low < candidateLow) {
         isValid = false;
         break;
       }
@@ -177,7 +177,7 @@ const isHaveWeCollectedLiquidity = (candles, currentIndex) => {
     // RIGHT
     if (isValid) {
       for (let k = 1; k <= SWING_RANGE2; k++) {
-        if (slice[j + k].low <= candidateLow) {
+        if (slice[j + k].low < candidateLow) {
           isValid = false;
           break;
         }
@@ -187,7 +187,7 @@ const isHaveWeCollectedLiquidity = (candles, currentIndex) => {
     // NOT BROKEN LATER
     if (isValid) {
       for (let k = j + 1; k < slice.length - 1; k++) {
-        if (slice[k].low <= candidateLow) {
+        if (slice[k].low < candidateLow) {
           isValid = false;
           break;
         }
@@ -376,22 +376,14 @@ for (let i = 0; i < candles.length; i++) {
       && mm !== "30" && mm !== "35" && mm !== "40" && mm !== "45" && mm !== "50" && mm !== "55") continue;
 
 
-    if (hh === "08") {
-      //console.log("Wrong time 8");
-      continue
-    };
-    if (hh === "09") {
-      //console.log("Wrong time 9");
-      continue
-    };
-    if (hh === "14") {
-      //console.log("Wrong time 14");
-      continue
-    };
-    if (hh === "16") {
-      //console.log("Wrong time 16");
-      continue
-    };
+    if (hh === "08") continue
+
+    if (hh === "09") continue
+
+    if (hh === "14") continue
+
+    if (hh === "16") continue
+
 
 
 
@@ -406,26 +398,26 @@ for (let i = 0; i < candles.length; i++) {
       continue;
     }
       const maxP = 2;
-      /*
+  
       const volScore = getVolatilityScore(candles, i, volume_LOOKBACK, maxP);
       if (volScore === null) continue;
       if (volScore < volume_indexMIN || volScore > volume_indexMAX) {
         continue;
       }
-*/
+
       const volScore2 = getVolatilityScore(candles, i, volume_LOOKBACK2, maxP);
       if (volScore2 === null) continue;
       if (volScore2 < volume_indexMIN2 || volScore2 > volume_indexMAX2) {
         //console.log("Out ofrange Volatility")
         continue;
       }
-/*
+
       const volScore3 = getVolatilityScore(candles, i, volume_LOOKBACK3, maxP);
       if (volScore3 === null) continue;
       if (volScore3 < volume_indexMIN3 || volScore3 > volume_indexMAX3) {
         continue;
       }
-*/
+
 
 
 
@@ -688,9 +680,9 @@ for (let i = 0; i < candles.length; i++) {
       maxDrawdownPercent: drawdownPercent(entryPrice1, minPrice1),
       maxUpBeforeThirdPercent: maxUpBeforeThird,
       //changePercent: changePercent,
-      //volumeindex: volScore,
+      volumeindex: volScore,
       volumeindex2: volScore2,
-      //volumeindex3: volScore3,
+      volumeindex3: volScore3,
       ...(fourthOpened && {
         gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade),
       }),

@@ -55,10 +55,10 @@ async function runAll() {
   // generateSMA(sma3);
 
   await new Promise(resolve => setTimeout(resolve, 1000));
-  const startTimegenerate = new Date("2022-03-23 16:00:00");
-//const startTimegenerate = new Date("2026-03-12 00:00:00");
+  //const startTimegenerate = new Date("2026-03-24 00:00:00");
+  //const endTimegenerate = new Date("2026-03-24 22:45:00"); 
+  const startTimegenerate = new Date("2022-03-23 00:00:00");
   const endTimegenerate = new Date("2027-01-30 16:35:00"); 
-    
 
 
 const volumes = expo(500, 1.195, 1);
@@ -138,16 +138,25 @@ const addPercents = expo(0.01, 1.55, 3.9);
 
   const volume_indexMIN = 0;
   const volume_indexMAX = 1;
-  const volume_LOOKBACK = 40; 
+  const volume_LOOKBACK = 6; 
 
-    //const volume_indexMIN2 = 0.11;
-  const volume_indexMIN2 = 0.103;
+  const volume_indexMIN2 = 0.097;
+  //const volume_indexMIN2 = 0;
   const volume_indexMAX2 = 1;
-  const volume_LOOKBACK2 = 12; 
+  const volume_LOOKBACK2 = 14; 
 
+/*
+  const volume_LOOKBACK2 = 13; 
+  const volume_indexMIN2 = 0.101;
+  //0.2057
+
+  const volume_LOOKBACK2 = 14; 
+  const volume_indexMIN2 = 0.097;
+  //0.2098
+*/
     const volume_indexMIN3 = 0;
   const volume_indexMAX3 = 1;
-  const volume_LOOKBACK3 = 48; 
+  const volume_LOOKBACK3 = 8; 
 
   const config = {
     START_BALANCE: 0, 
@@ -190,9 +199,10 @@ const addPercents = expo(0.01, 1.55, 3.9);
 
 
 setTimeout(() => {   
-  const startTime = "2026-03-27 00:00:00"; 
-  //const startTime = "2026-01-19 22:00:00";
+  const startTime = "2022-03-22 00:00:00"; 
   const endTime = "2027-01-31 00:35:00";
+  //const startTime = "2026-03-24 00:00:00"; 
+  //const endTime = "2026-03-25 20:45:00";
 
   const datapath2 = datapath; 
   const runGeneration = require('./visualization/generation.js');

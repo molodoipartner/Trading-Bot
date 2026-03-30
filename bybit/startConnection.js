@@ -58,16 +58,16 @@ function expoPercents(
 }
 
 
-const deposit = 1003;
+const deposit = 1030; // общий депозит для расчёта объёмов (можно менять, не влияет на стратегию)
 //const deposit = 650;
 // ================= CONFIG =================
   const LOOKBACK_HOURS = 95;
   const SWING_RANGE = 14;
   const SWING_RANGE2 = 7;
 
-const volume_indexMIN2 = 0.103;
+const volume_indexMIN2 = 0.097;
 const volume_indexMAX2 = 1;
-const volume_LOOKBACK2 = 12; 
+const volume_LOOKBACK2 = 14; 
 const STRATEGY_CONFIG = {
   //symbol: "XAUUSDT",
   symbol: "ETHUSDT",

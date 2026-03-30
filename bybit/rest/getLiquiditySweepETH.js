@@ -62,7 +62,7 @@ async function getLiquiditySweepETH(LOOKBACK_HOURS, SWING_RANGE, SWING_RANGE2) {
 
     // LEFT
     for (let k = 1; k <= SWING_RANGE; k++) {
-      if (slice[j - k].low <= candidateLow) {
+      if (slice[j - k].low < candidateLow) {
         isValid = false;
         break;
       }
@@ -71,7 +71,7 @@ async function getLiquiditySweepETH(LOOKBACK_HOURS, SWING_RANGE, SWING_RANGE2) {
     // RIGHT
     if (isValid) {
       for (let k = 1; k <= SWING_RANGE2; k++) {
-        if (slice[j + k].low <= candidateLow) {
+        if (slice[j + k].low < candidateLow) {
           isValid = false;
           break;
         }
@@ -81,7 +81,7 @@ async function getLiquiditySweepETH(LOOKBACK_HOURS, SWING_RANGE, SWING_RANGE2) {
     // NOT BROKEN LATER
     if (isValid) {
       for (let k = j + 1; k < slice.length - 1; k++) {
-        if (slice[k].low <= candidateLow) {
+        if (slice[k].low < candidateLow) {
           isValid = false;
           break;
         }
