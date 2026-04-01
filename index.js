@@ -1,5 +1,5 @@
 //require('./runpy.js');
-
+/*
 const http = require("http");
 
 const PORT = process.env.PORT || 3000;
@@ -15,7 +15,7 @@ http.createServer((req, res) => {
 }).listen(PORT, () => {
   console.log(`🌐 Health server listening on port ${PORT}`);
 });
-
+*/
 require("dotenv").config();   // 🔥 ПЕРВАЯ СТРОКА
 
 
@@ -55,7 +55,7 @@ async function runAll() {
   // generateSMA(sma3);
 
   await new Promise(resolve => setTimeout(resolve, 1000));
-  const startTimegenerate = new Date("2026-03-30 00:00:00");
+  const startTimegenerate = new Date("2022-03-22 00:00:00");
   //const endTimegenerate = new Date("2026-03-24 22:45:00"); 
   //const startTimegenerate = new Date("2022-03-23 00:00:00");
   const endTimegenerate = new Date("2027-01-30 16:35:00"); 
