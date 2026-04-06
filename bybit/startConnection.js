@@ -57,8 +57,9 @@ function expoPercents(
   return values;
 }
 
+const VOLATILITY_CHECK_HOURS = [20, 21, 22, 23, 2, 3, 4];
 
-const deposit = 1050; // общий депозит для расчёта объёмов (можно менять, не влияет на стратегию)
+const deposit = 1100; // общий депозит для расчёта объёмов (можно менять, не влияет на стратегию)
 //const deposit = 650;
 // ================= CONFIG =================
   const LOOKBACK_HOURS = 95;
@@ -131,7 +132,7 @@ async function checkEthStrategy() {
 
     const Volatilityresult = await getVolatilityScoreETH(volume_LOOKBACK2);
     
-      if (Volatilityresult.score < volume_indexMIN2 || Volatilityresult.score > volume_indexMAX2) {
+      if ((Volatilityresult.score < volume_indexMIN2 || Volatilityresult.score > volume_indexMAX2) && !VOLATILITY_CHECK_HOURS.includes(currentHour)) {
         console.log(
           `⛔ Volatility ${Volatilityresult}% out of ranges (${volume_indexMIN2}% .. ${volume_indexMAX2}%)`
         );

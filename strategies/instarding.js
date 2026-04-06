@@ -384,7 +384,12 @@ for (let i = 0; i < candles.length; i++) {
 
     if (hh === "16") continue
 
+    //const allowedHours_without_volatility = ["02", "03", "04"]; // какие хочешь часы
+    //const allowedHours_without_volatility = ["20", "21", "22", "23"]; // какие хочешь часы 22.19
+    //const allowedHours_without_volatility = ["20", "21", "22", "23", "02", "03", "04"]; / какие хочешь часы 23.10
 
+
+    const allowedHours_without_volatility = ["20", "21", "22", "23", "02", "03", "04"]; // какие хочешь часы 23.10
 
 
 
@@ -397,6 +402,8 @@ for (let i = 0; i < candles.length; i++) {
     if (isInPosition) {
       continue;
     }
+
+
       const maxP = 2;
   
       const volScore = getVolatilityScore(candles, i, volume_LOOKBACK, maxP);
@@ -407,7 +414,7 @@ for (let i = 0; i < candles.length; i++) {
 
       const volScore2 = getVolatilityScore(candles, i, volume_LOOKBACK2, maxP);
       if (volScore2 === null) continue;
-      if (volScore2 < volume_indexMIN2 || volScore2 > volume_indexMAX2) {
+      if ((volScore2 < volume_indexMIN2 || volScore2 > volume_indexMAX2) && (!allowedHours_without_volatility.includes(hh))) {
         //console.log("Out ofrange Volatility")
         continue;
       }
@@ -427,6 +434,8 @@ for (let i = 0; i < candles.length; i++) {
     if (!canbeopened) {
       continue;
     }
+
+
 
 /*
     const { inRange, changePercent } = isPriceChangeInRange(candles, i);
