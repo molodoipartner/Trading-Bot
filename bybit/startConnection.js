@@ -66,7 +66,7 @@ const deposit = 1100; // общий депозит для расчёта объ�
   const SWING_RANGE = 14;
   const SWING_RANGE2 = 7;
 
-const volume_indexMIN2 = 0.097;
+const volume_indexMIN2 = 0.098;
 const volume_indexMAX2 = 1;
 const volume_LOOKBACK2 = 14; 
 const STRATEGY_CONFIG = {

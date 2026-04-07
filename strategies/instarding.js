@@ -605,7 +605,22 @@ for (let i = 0; i < candles.length; i++) {
           (thirdOpened ? VOLUME3 : 0) +
           (fourthOpened ? VOLUME4 : 0) +
           (fifthOpened ? VOLUME5 : 0);
+        /**
+         * 
+         *     "exitPrice": 2062,1308605
+         * 
+         * 
+         *     "entryPrice": 2053,5 500$ объём
+         *  
+         *     "entryPrice": 2032,965 597,5$ объём
+         * 
+         * 
+         *  2042,3203530751707
+         * 
+         * 2 042,2691876430205949656750572082
+         */
 
+        /*
         const avgEntry =
           (entryWithSpread1 * VOLUME1 +
             entryWithSpread2 * VOLUME2 +
@@ -613,6 +628,27 @@ for (let i = 0; i < candles.length; i++) {
             (fourthOpened ? entryWithSpread4 * VOLUME4 : 0) +
             (fifthOpened ? entryWithSpread5 * VOLUME5 : 0)) /
           totalVolume;
+        */
+
+        const totalMoney =
+          VOLUME1 +
+          VOLUME2 +
+          (thirdOpened ? VOLUME3 : 0) +
+          (fourthOpened ? VOLUME4 : 0) +
+          (fifthOpened ? VOLUME5 : 0);
+
+        const totalAsset =
+          VOLUME1 / entryWithSpread1 +
+          VOLUME2 / entryWithSpread2 +
+          (thirdOpened ? VOLUME3 / entryWithSpread3 : 0) +
+          (fourthOpened ? VOLUME4 / entryWithSpread4 : 0) +
+          (fifthOpened ? VOLUME5 / entryWithSpread5 : 0);
+
+        const avgEntry = totalMoney / totalAsset;
+
+
+
+
         avgEntryPrice = avgEntry;
         const tpAvg = avgEntry * (1 + TP_PERCENT);
 
