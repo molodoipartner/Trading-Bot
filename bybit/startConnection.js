@@ -11,8 +11,17 @@ let isInPosition = false;
 let isStrategyRunning = false;
 let tpUpdateLock = false;
 
-
-
+let currentEntryPrice1 = null;
+let currentEntryPrice2 = null;
+let currentEntryPrice3 = null;
+let currentEntryPrice4 = null;
+let currentEntryPrice5 = null;
+let currentVolumeForPosition1 = null;
+let currentVolumeForPosition2 = null;
+let currentVolumeForPosition3 = null;
+let currentVolumeForPosition4 = null;
+let currentVolumeForPosition5 = null;
+let updateTakeProfitCount = 0;
 
 function expoVolumesFromTotal(
   totalAmount,   // общий депозит (например 1000)
@@ -59,7 +68,7 @@ function expoPercents(
 
 const VOLATILITY_CHECK_HOURS = [20, 21, 22, 23, 2, 3, 4];
 
-const deposit = 1100; // общий депозит для расчёта объёмов (можно менять, не влияет на стратегию)
+const deposit = 1150; // общий депозит для расчёта объёмов (можно менять, не влияет на стратегию)
 //const deposit = 650;
 // ================= CONFIG =================
   const LOOKBACK_HOURS = 95;
@@ -245,6 +254,10 @@ async function checkEthStrategy() {
         takeProfit: takeProfitPrice,
       });
 
+
+      currentEntryPrice1 = result.endPrice;
+      currentVolumeForPosition1 = volumeUSDT0;
+
       // ---------- LIMIT ORDER 1 WITH LEVERAGE ----------
       const price = Number(
         (result.endPrice - (result.endPrice * STRATEGY_CONFIG.addPercents[0])).toFixed(2)
@@ -274,7 +287,10 @@ async function checkEthStrategy() {
         price,
         leverage,             // ✅ плечо отдельно
       });
- 
+      
+      currentEntryPrice2 = price;
+      currentVolumeForPosition2 = volumeUSDT;
+
       // ---------- LIMIT ORDER 2 WITH LEVERAGE ----------
       const price2 = Number(
         (price - (price * STRATEGY_CONFIG.addPercents[1])).toFixed(2)
@@ -305,6 +321,9 @@ async function checkEthStrategy() {
         leverage,             // ✅ плечо отдельно
       });
     
+      currentEntryPrice3 = price2;
+      currentVolumeForPosition3 = volumeUSDT2;
+
       // ---------- LIMIT ORDER 3 WITH LEVERAGE ----------
       const price3 = Number(
         (price2 - (price2 * STRATEGY_CONFIG.addPercents[2])).toFixed(2)
@@ -334,6 +353,9 @@ async function checkEthStrategy() {
         leverage,             // ✅ плечо отдельно
       });
 
+      currentEntryPrice4 = price3;
+      currentVolumeForPosition4 = volumeUSDT3;
+
       // ---------- LIMIT ORDER 4 WITH LEVERAGE ----------
       const price4 = Number(
         (price3 - (price3 * STRATEGY_CONFIG.addPercents[3])).toFixed(2)
@@ -362,6 +384,10 @@ async function checkEthStrategy() {
         price: price4,
         leverage,             // ✅ плечо отдельно
       });
+
+      currentEntryPrice5 = price4;
+      currentVolumeForPosition5 = volumeUSDT4;
+
 
     console.log("✅ All orders placed successfully");
 
@@ -448,20 +474,87 @@ function calcTakeProfit(entryPrice, percent = STRATEGY_CONFIG.order.takeProfitPe
   return entryPrice + (entryPrice * multiplier);
 }
 
-async function updateTakeProfitFromPosition(position) {
-  const { avgPrice, size } = position;
+function calculateAvgEntry(callNumber) {
+  const prices = [
+    currentEntryPrice1,
+    currentEntryPrice2,
+    currentEntryPrice3,
+    currentEntryPrice4,
+    currentEntryPrice5,
+  ];
+
+  const volumes = [
+    currentVolumeForPosition1,
+    currentVolumeForPosition2,
+    currentVolumeForPosition3,
+    currentVolumeForPosition4,
+    currentVolumeForPosition5,
+  ];
+
+  let totalMoney = 0;
+  let totalAsset = 0;
+
+  // Берём позиции до callNumber + 1
+  for (let i = 0; i <= callNumber; i++) {
+    const price = Number(prices[i]);
+    const volume = Number(volumes[i]);
+
+    if (!price || !volume) continue;
+
+    totalMoney += volume;
+    totalAsset += volume / price;
+  }
+
+  if (totalAsset === 0) return 0;
+
+  return totalMoney / totalAsset;
+}
+
+
+async function updateTakeProfitFromPosition(position, callNumber) {
+  const { size, avgPrice: exchangeAvgPrice } = position;
 
   if (!Number(size)) return;
+
+  const calculatedAvgPrice = calculateAvgEntry(callNumber);
+
+  // ---- считаем разницу в процентах ----
+  const diffPercent =
+    Math.abs(calculatedAvgPrice - exchangeAvgPrice) /
+    exchangeAvgPrice * 100;
+
+  const MAX_DIFF_PERCENT = 0.2; // можно настроить (0.1–0.5%)
+
+  let finalAvgPrice = calculatedAvgPrice;
+
+  if (diffPercent > MAX_DIFF_PERCENT) {
+    console.warn("⚠️ AVG PRICE MISMATCH!", {
+      callNumber,
+      exchangeAvgPrice,
+      calculatedAvgPrice,
+      diffPercent: diffPercent.toFixed(4) + "%",
+      action: "USING EXCHANGE AVG PRICE"
+    });
+
+    finalAvgPrice = exchangeAvgPrice;
+  } else {
+    console.log("✅ AVG PRICE OK", {
+      callNumber,
+      exchangeAvgPrice,
+      calculatedAvgPrice,
+      diffPercent: diffPercent.toFixed(4) + "%"
+    });
+  }
 
   const symbol = STRATEGY_CONFIG.symbol;
 
   const tp = calcTakeProfit(
-    Number(avgPrice),
+    Number(finalAvgPrice),
     STRATEGY_CONFIG.order.takeProfitPercent
   );
 
   console.log("🎯 Updating TP:", {
-    avgPrice,
+    usedAvgPrice: finalAvgPrice,
     size,
     tp: tp.toFixed(2),
   });
@@ -517,7 +610,18 @@ async function updateTakeProfitFromPosition(position) {
 
 async function cancelAllOrders(symbol) {
   console.log("🧹 Cancelling all open orders for", symbol);
-
+  currentEntryPrice1 = null;
+  currentEntryPrice2 = null;
+  currentEntryPrice3 = null;
+  currentEntryPrice4 = null;
+  currentEntryPrice5 = null;
+  currentVolumeForPosition1 = null;
+  currentVolumeForPosition2 = null;
+  currentVolumeForPosition3 = null;
+  currentVolumeForPosition4 = null;
+  currentVolumeForPosition5 = null;
+  updateTakeProfitCount = 0;
+  
   await privateRequest("POST", "/v5/order/cancel-all", {
     category: "linear",
     symbol,
@@ -565,8 +669,8 @@ async function cancelAllOrders(symbol) {
             console.log("⚠️ No open position found");
             return;
           }
-
-          await updateTakeProfitFromPosition(position);
+          updateTakeProfitCount++;
+          await updateTakeProfitFromPosition(position, updateTakeProfitCount);
 
         } catch (e) {
           console.error("❌ Failed to update TP:", e.message);
