@@ -21,7 +21,7 @@ require("dotenv").config();   // 🔥 ПЕРВАЯ СТРОКА
 
 
 //require("./bybit/ws/node.js");
-require("./bybit/startConnection.js");
+//require("./bybit/startConnection.js");
 //require("./nigger.js");
 //require("./bybit/ws/check-sign.js");
 //require('./bybit/bybitconnectiontest.js');
