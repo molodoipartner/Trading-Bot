@@ -55,16 +55,16 @@ async function runAll() {
   // generateSMA(sma3);
 
   await new Promise(resolve => setTimeout(resolve, 1000));
-  const startTimegenerate = new Date("2026-03-26 00:00:00");
+  const startTimegenerate = new Date("2022-04-13 00:00:00");
   //const endTimegenerate = new Date("2026-03-24 22:45:00"); 
   //const startTimegenerate = new Date("2026-04-01 00:00:00");
   const endTimegenerate = new Date("2027-01-30 16:35:00"); 
 
 
-const volumes = expo(7000, 1.195, 1);
+const volumes = expo(7000, 1.18, 1);
 const addPercents = expo(0.01, 1.48, 4.22);
-//0.116231 ,0.116091, 0.117135 0.115358, ,0.116118
-//
+//const volumes = expo(7000, 1.195, 1);
+//const addPercents = expo(0.01, 1.48, 4.22);
 //1.7265
 /*
 
@@ -204,7 +204,7 @@ const addPercents = expo(0.01, 1.55, 3.9);
 
 
 setTimeout(() => {   
-  const startTime = "2026-04-06 00:00:00"; 
+  const startTime = "2022-04-13 00:00:00"; 
 
   //const startTime = "2026-04-01 00:00:00"; 
     const endTime = "2027-02-06 17:25:00";

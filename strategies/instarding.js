@@ -389,7 +389,7 @@ for (let i = 0; i < candles.length; i++) {
     //const allowedHours_without_volatility = ["20", "21", "22", "23", "02", "03", "04"]; / какие хочешь часы 23.10
 
 
-    const allowedHours_without_volatility = ["20", "21", "22", "23", "02", "03", "04"]; // какие хочешь часы 23.10
+    const allowedHours_without_volatility = ["20", "21", "22", "23"]; // какие хочешь часы 23.10
 
 
 

@@ -66,7 +66,7 @@ function expoPercents(
   return values;
 }
 
-const VOLATILITY_CHECK_HOURS = [20, 21, 22, 23, 2, 3, 4];
+const VOLATILITY_CHECK_HOURS = [20, 21, 22, 23];
 
 const deposit = 1150; // общий депозит для расчёта объёмов (можно менять, не влияет на стратегию)
 //const deposit = 650;
@@ -101,7 +101,7 @@ const STRATEGY_CONFIG = {
 
   deposit: deposit,
 
-  volumes: expoVolumesFromTotal(deposit, 1.195, 1, 5),
+  volumes: expoVolumesFromTotal(deposit, 1.18, 1, 5),
   addPercents: expoPercents(0.01, 1.48, 4.22, 5)
   //volumes: expoVolumesFromTotal(deposit, 1.2, 1, 5),
   //addPercents: expoPercents(0.01, 1.11, 18, 5)
