@@ -22,6 +22,7 @@ let currentVolumeForPosition3 = null;
 let currentVolumeForPosition4 = null;
 let currentVolumeForPosition5 = null;
 let updateTakeProfitCount = 0;
+let dynamicTP;
 
 function expoVolumesFromTotal(
   totalAmount,   // общий депозит (например 1000)
@@ -68,7 +69,7 @@ function expoPercents(
 
 const VOLATILITY_CHECK_HOURS = [20, 21, 22, 23];
 
-const deposit = 1150; // общий депозит для расчёта объёмов (можно менять, не влияет на стратегию)
+const deposit = 1160; // общий депозит для расчёта объёмов (можно менять, не влияет на стратегию)
 //const deposit = 650;
 // ================= CONFIG =================
   const LOOKBACK_HOURS = 95;
@@ -81,7 +82,7 @@ const volume_LOOKBACK2 = 14;
 const STRATEGY_CONFIG = {
   //symbol: "XAUUSDT",
   symbol: "ETHUSDT",
-  DISABLED_HOURS: [8, 9, 14, 16], // часы по серверному времени
+  DISABLED_HOURS: [9, 14, 16], // часы по серверному времени
   //DISABLED_HOURS: [6, 13, 14, 17, 18, 19, 20, 21, 22, 23], // часы по серверному времени    
   //minPercent: -0.157,
   //maxPercent: -0.267,
@@ -211,11 +212,40 @@ async function checkEthStrategy() {
 
     console.log("✅ Strategy conditions met");
     */
+    const minCB = 8;
+    const maxCB = 79;
+
+    // берём из результата
+    const cbRaw = result.candlesBetween;
+
+    // защита (если вдруг null)
+    if (cbRaw === null || cbRaw === undefined) {
+      console.log("❌ No candlesBetween");
+      return;
+    }
+
+    // clamp
+    const cb = Math.max(minCB, Math.min(cbRaw, maxCB));
+
+    if (cb < 25) {
+      dynamicTP = 0.011; // 🔥 сильный импульс
+    } else if (cb < 50) {
+      dynamicTP = 0.009; // средний
+    } else {
+      dynamicTP = 0.012; // слабый / растянутый
+    }
+
 
     const takeProfitPrice =
-      result.endPrice + result.endPrice * (STRATEGY_CONFIG.order.takeProfitPercent / 100);
-    console.log(`📈 Placing order at $${result.endPrice.toFixed(2)}, TP at $${takeProfitPrice.toFixed(2)}`);
-   
+      result.endPrice + result.endPrice * dynamicTP;
+      
+      console.log(`
+      📊 candlesBetween: ${cb}
+      🎯 TP%: ${(dynamicTP * 100).toFixed(2)}%
+      📈 Entry: ${result.endPrice.toFixed(2)}
+      🚀 TP: ${takeProfitPrice.toFixed(2)}
+      `);
+
       //For every entry type
       const leverage = STRATEGY_CONFIG.order.leverage;
       //const MIN_QTY = 0.001;
@@ -469,8 +499,7 @@ function runEveryAligned(intervalMs, task, offsetMs = 0) {
   };
 }
 
-function calcTakeProfit(entryPrice, percent = STRATEGY_CONFIG.order.takeProfitPercent) {
-  const multiplier = percent / 100;
+function calcTakeProfit(entryPrice, multiplier) {
   return entryPrice + (entryPrice * multiplier);
 }
 
@@ -548,10 +577,7 @@ async function updateTakeProfitFromPosition(position, callNumber) {
 
   const symbol = STRATEGY_CONFIG.symbol;
 
-  const tp = calcTakeProfit(
-    Number(finalAvgPrice),
-    STRATEGY_CONFIG.order.takeProfitPercent
-  );
+  const tp = calcTakeProfit(Number(finalAvgPrice), dynamicTP);
 
   console.log("🎯 Updating TP:", {
     usedAvgPrice: finalAvgPrice,
@@ -621,7 +647,7 @@ async function cancelAllOrders(symbol) {
   currentVolumeForPosition4 = null;
   currentVolumeForPosition5 = null;
   updateTakeProfitCount = 0;
-  
+  dynamicTP = null;
   await privateRequest("POST", "/v5/order/cancel-all", {
     category: "linear",
     symbol,

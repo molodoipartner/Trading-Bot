@@ -657,6 +657,93 @@ def plot_changepercent_duration(trades):
     plt.savefig("result/topresult/all_trades_duration_map.png", dpi=150)
     plt.close()
 
+def plot_candlesbetween_with_avg_positions(trades):
+
+    from collections import defaultdict
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    # candlesBetween -> список amount_of_trades
+    data = defaultdict(list)
+
+    for trade in trades:
+        if trade.get("positionNumber") != 1:
+            continue
+
+        cb = trade.get("candlesBetween")
+        amt = trade.get("amount_of_trades")
+
+        if cb is None or amt is None:
+            continue
+
+        try:
+            cb = int(cb)
+            amt = int(amt)
+        except:
+            continue
+
+        data[cb].append(amt)
+
+    if not data:
+        print("Нет данных")
+        return
+
+    # X — отсортированные candlesBetween
+    x = sorted(data.keys())
+
+    # Y1 — количество сделок
+    counts = [len(data[val]) for val in x]
+
+    # Y2 — среднее количество позиций
+    avg_positions = [sum(data[val]) / len(data[val]) for val in x]
+
+    # 🎨 цвета по плотности
+    colors = [
+        "green" if c <= np.percentile(counts, 33)
+        else "orange" if c <= np.percentile(counts, 66)
+        else "red"
+        for c in counts
+    ]
+
+    plt.figure(figsize=(15, 7))
+
+    # === ОСНОВНОЙ ГРАФИК (как у тебя)
+    plt.vlines(x, [0], counts, alpha=0.2)
+    plt.scatter(x, counts, c=colors, alpha=0.7, label="Trade count")
+
+    plt.xlabel("candlesBetween")
+    plt.ylabel("Number of trades")
+
+    # === ВТОРАЯ ОСЬ (🔥 ключевая штука)
+    ax2 = plt.gca().twinx()
+
+    ax2.plot(
+        x,
+        avg_positions,
+        color="blue",
+        linewidth=2,
+        label="Avg positions per trade"
+    )
+
+    ax2.set_ylabel("Avg amount_of_trades")
+
+    # === шаг по X
+    step = 1
+    plt.xticks(np.arange(min(x), max(x) + step, step))
+
+    plt.title("candlesBetween vs trades + avg positions")
+
+    # === объединяем легенды
+    lines_1, labels_1 = plt.gca().get_legend_handles_labels()
+    lines_2, labels_2 = ax2.get_legend_handles_labels()
+
+    plt.legend(lines_1 + lines_2, labels_1 + labels_2)
+
+    plt.grid(True)
+    plt.tight_layout()
+
+    plt.savefig("result/topresult/candlesbetween_with_avg_positions.png", dpi=150)
+    plt.close()
 
 
 def plot_volumeindex_duration(trades):
@@ -755,6 +842,8 @@ def plot_volumeindex_duration(trades):
     plt.tight_layout()
     plt.savefig("result/volume/all_trades24_volumeindex_map.png", dpi=150)
     plt.close()
+
+
 def plot_volumeindex_duration2(trades):
 
     trade_points = []
@@ -948,6 +1037,7 @@ def plot_volumeindex_duration3(trades):
     plt.savefig("result/volume/all_trades48_volumeindex_map.png", dpi=150)
     plt.close()
 
+plot_candlesbetween_with_avg_positions(trades)
 plot_changepercent_duration(trades)
 plot_volumeindex_duration(trades)
 plot_volumeindex_duration2(trades)

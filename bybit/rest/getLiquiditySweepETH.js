@@ -126,6 +126,20 @@ async function getLiquiditySweepETH(LOOKBACK_HOURS, SWING_RANGE, SWING_RANGE2) {
 
   const canbeopened = isSweep && isReclaim;
 
+  let candlesBetween = null;
+
+  if (canbeopened && lowestLowCandle) {
+    const liquidityIndex = slice.findIndex(
+      c => c.time === lowestLowCandle.time
+    );
+
+    const currentIndexInSlice = slice.length - 1;
+
+    if (liquidityIndex !== -1) {
+      candlesBetween = currentIndexInSlice - liquidityIndex - 1;
+    }
+  }
+
   const liquidityLevel = {
     price: lowestLow,
     time: lowestLowCandle.time,
@@ -139,6 +153,7 @@ async function getLiquiditySweepETH(LOOKBACK_HOURS, SWING_RANGE, SWING_RANGE2) {
     liquidityLevel,
     range,
     endPrice,
+    candlesBetween: canbeopened ? candlesBetween : null,
   };
 }
 

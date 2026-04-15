@@ -265,18 +265,31 @@ time:  ${liquidityLevel.timeReadable}
 time:  ${new Date(currentCandle.time).toLocaleString()}
 low:   ${currentCandle.low}
 close: ${currentCandle.close}
-
+ 
 ✅ RESULT: ${canbeopened}
 ==============================
     `);
 
 */
+  let candlesBetween = null;
 
+  if (canbeopened && lowestLowCandle) {
+    const liquidityIndex = slice.findIndex(
+      c => c.time === lowestLowCandle.time
+    );
+
+    const currentIndexInSlice = slice.length - 1;
+
+    if (liquidityIndex !== -1) {
+      candlesBetween = currentIndexInSlice - liquidityIndex - 1;
+    }
+  }
 
   return {
     canbeopened,
     liquidityLevel,
-    range
+    range,
+    candlesBetween: canbeopened ? candlesBetween : null
   };
 };
 
@@ -376,7 +389,7 @@ for (let i = 0; i < candles.length; i++) {
       && mm !== "30" && mm !== "35" && mm !== "40" && mm !== "45" && mm !== "50" && mm !== "55") continue;
 
 
-    if (hh === "08") continue
+
 
     if (hh === "09") continue
 
@@ -388,6 +401,8 @@ for (let i = 0; i < candles.length; i++) {
     //const allowedHours_without_volatility = ["20", "21", "22", "23"]; // какие хочешь часы 22.19
     //const allowedHours_without_volatility = ["20", "21", "22", "23", "02", "03", "04"]; / какие хочешь часы 23.10
 
+
+    //const allowedHours_without_volatility = ["20", "21", "22", "23"]; // какие хочешь часы 23.10
 
     const allowedHours_without_volatility = ["20", "21", "22", "23"]; // какие хочешь часы 23.10
 
@@ -429,7 +444,7 @@ for (let i = 0; i < candles.length; i++) {
 
 
 
-    const { canbeopened, liquidityLevel, range } = isHaveWeCollectedLiquidity(candles, i);
+    const { canbeopened, liquidityLevel, range, candlesBetween} = isHaveWeCollectedLiquidity(candles, i);
 
     if (!canbeopened) {
       continue;
@@ -463,7 +478,39 @@ for (let i = 0; i < candles.length; i++) {
     const entryWithSpread1 = entryPrice1 + SPREAD / 2;
 
     const addPrice2 = entryPrice1 * (1 - ADD_PERCENT);
-    const tp1 = entryWithSpread1 * (1 + TP_PERCENT);
+
+
+    const minCB = 8;
+    const maxCB = 79;
+
+    const cb = Math.max(minCB, Math.min(candlesBetween, maxCB));
+
+    let dynamicTP;
+
+    if (cb < 25) {
+      dynamicTP = 0.011; // 🔥 самый сильный импульс
+    } else if (cb < 50) {
+      dynamicTP = 0.009; // средний
+    } else {
+      dynamicTP = 0.012; // слабый сетап
+    }
+
+
+
+    /*
+    //2253
+
+    if (cb < 20) {
+      dynamicTP = 0.011; // 🔥 самый сильный импульс
+    } else if (cb < 27) {
+      dynamicTP = 0.011; // средний
+    } else {
+      dynamicTP = 0.0097; // слабый сетап
+    }
+
+
+    */
+    const tp1 = entryWithSpread1 * (1 + dynamicTP);
 
     let secondOpened = false;
     let thirdOpened = false;
@@ -650,7 +697,7 @@ for (let i = 0; i < candles.length; i++) {
 
 
         avgEntryPrice = avgEntry;
-        const tpAvg = avgEntry * (1 + TP_PERCENT);
+        const tpAvg = avgEntry * (1 + dynamicTP);
 
         if (
           c.high >= tpAvg &&
@@ -704,6 +751,12 @@ for (let i = 0; i < candles.length; i++) {
       String(minutes).padStart(2, "0") + ":" +
       String(seconds).padStart(2, "0");
 
+    let amount_of_trades = 1;  
+    if(secondOpened) amount_of_trades++;
+    if(thirdOpened) amount_of_trades++;
+    if(fourthOpened) amount_of_trades++;
+    if(fifthOpened) amount_of_trades++;
+
     trades.push({
       entryTime: entryTime1,
       entryPrice: entryPrice1,
@@ -728,6 +781,9 @@ for (let i = 0; i < candles.length; i++) {
       volumeindex: volScore,
       volumeindex2: volScore2,
       volumeindex3: volScore3,
+      candlesBetween,
+      amount_of_trades,
+      dynamicTP,
       ...(fourthOpened && {
         gridDrawdownPercent: gridDrawdownPercent(avgEntryPrice, minPriceWholeTrade),
       }),
