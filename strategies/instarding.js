@@ -1,13 +1,3 @@
-/**
- * Morning Quintuple Long Strategy (NO STOPS)
- * - Вход каждый день в 17:00
- * - LONG
- * - 1–5 позиции с индивидуальными объёмами
- * - Усреднение
- * - Закрытие ТОЛЬКО по TP от среднего
- * - Новые сделки запрещены пока старая не закрыта
- */
-
 const runMorningQuintupleLongStrategy = async (candles, config) => {
   const {
     SPREAD,
@@ -720,8 +710,10 @@ for (let i = 0; i < candles.length; i++) {
 
     const exitWithSpread = exitPrice - SPREAD / 2;
 
-    const profit = (exit, entry, vol) =>
-      exit * (vol / entry) - vol;
+    const profit = (exit, entry, vol) => {
+      const result = exit * (vol / entry) - vol;
+      return Number(result.toFixed(2));
+    };
 
     const drawdownPercent = (entry, min) =>
       ((entry - min) / entry) * 100;

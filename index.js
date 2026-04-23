@@ -1,4 +1,5 @@
 //require('./runpy.js');
+//require('./runpyXAU.js');
 /*
 const http = require("http");
 
@@ -37,6 +38,7 @@ require("./bybit/startConnection.js");
 //require('./backtest/smatest.js');
 const generateSMA = require("./generateSMA.js");
 const generateTrades = require('./generateTrades'); 
+const generateTradesXau = require('./generateTradesXAU.js');
 const runpyVisual = require('./runpyVisual.js');
 const expo = require("./wiw/expo.js");
 
@@ -44,7 +46,7 @@ const sma1 = 1201;
 const sma2 = 1682;
 const sma3 = 1503;
 
-const datapath = "./backtest/ETHUSDT_5m.csv";
+const datapath = "./backtest/XAUTUSDT_5m.csv";
 //XAUUSD_M5_4years.csv
 //ETHUSDT_5m.csv
 
@@ -202,12 +204,95 @@ const addPercents = expo(0.01, 1.55, 3.9);
 } 
 //runAll(); 
 
+async function runAllXAU() { 
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  const startTimegenerate = new Date("2022-04-15 00:00:00");
+  const endTimegenerate = new Date("2027-01-30 16:35:00"); 
+  const volumes = expo(7000, 1.18, 1);
+  const addPercents = expo(0.01, 1.48, 4.22);
+  const [
+    VOLUME2,
+    VOLUME3,
+    VOLUME4,
+    VOLUME5,
+  ] = volumes;
+  const VOLUME1 = 1000;
+  const volumessum = (VOLUME1 + VOLUME2 + VOLUME3 + VOLUME4 + VOLUME5)
+  const [
+    ADD_PERCENT,
+    THIRD_ADD_PERCENT,
+    FOURTH_ADD_PERCENT,
+    FIFTH_ADD_PERCENT
+  ] = addPercents; 
+  const MIN_DROP_PERCENT1 = -10;
+  const MAX_DROP_PERCENT1 =  20;
+  const MIN_DROP_PERCENT2 = 21;
+  const MAX_DROP_PERCENT2 = 22;
+  const LOOKBACK_HOURS2changePercent = 110;
+  const LOOKBACK_HOURS2 = 30;
+  const SWING_RANGE = 6;
+  const SWING_RANGE2 = 7;
+  /*
+  */
+  const takeprofit = 0.002;
+
+  const volume_indexMIN = 0;
+  const volume_indexMAX = 1;
+  const volume_LOOKBACK = 6; 
+
+  const volume_indexMIN2 = 0.005;
+  const volume_indexMAX2 = 0.079;
+  //const volume_indexMAX2 = 0.115; 15 161,5
+  const volume_LOOKBACK2 = 15; 
+
+  const volume_indexMIN3 = 0;
+  const volume_indexMAX3 = 1;
+  const volume_LOOKBACK3 = 8; 
+  
+  const config = {
+    START_BALANCE: 0, 
+    SPREAD: 0,
+    VOLUME1,
+    VOLUME2,
+    VOLUME3,
+    VOLUME4,
+    VOLUME5,
+    TP_PERCENT: takeprofit,   // +1%
+    ADD_PERCENT,
+    THIRD_ADD_PERCENT,  
+    FOURTH_ADD_PERCENT,
+    FIFTH_ADD_PERCENT,
+    MIN_MINUTES_BETWEEN_FIRST_AND_THIRD: 0,
+    LOOKBACK_HOURS: LOOKBACK_HOURS2,
+    LOOKBACK_HOURS2changePercent,
+    MIN_DROP_PERCENT10: MIN_DROP_PERCENT1,
+    MAX_DROP_PERCENT10: MAX_DROP_PERCENT1,
+    MIN_DROP_PERCENT20: MIN_DROP_PERCENT2,
+    MAX_DROP_PERCENT20: MAX_DROP_PERCENT2,
+    volume_indexMIN,
+    volume_indexMAX,
+    volume_LOOKBACK,
+    volume_indexMIN2,
+    volume_indexMAX2,
+    volume_LOOKBACK2,
+    volume_indexMIN3,
+    volume_indexMAX3,
+    volume_LOOKBACK3,
+    SWING_RANGE,
+    SWING_RANGE2,
+    volumessum: volumessum,
+  };
+  console.log(`\n^^^^^^^^^^^^^^^^^^^^\n${startTimegenerate.toISOString().split('T')[0]} - ${endTimegenerate.toISOString().split('T')[0]}\nVolumes: V1=${VOLUME1}, V2=${VOLUME2}, V3=${VOLUME3}, V4=${VOLUME4}, V5=${VOLUME5}\nSum: ${volumessum}\nTake: ${takeprofit}\nPercents: ${addPercents}\nDrop Percents: min ${MIN_DROP_PERCENT2}, max ${MAX_DROP_PERCENT2}\n^^^^^^^^^^^^^^^^^^^^\n`)
+  generateTradesXau(startTimegenerate, endTimegenerate, config, datapath); await new Promise(resolve => setTimeout(resolve, 4000)); await runpyVisual();
+} 
+//runAllXAU(); 
+
 
 setTimeout(() => {   
-  const startTime = "2022-04-15 00:00:00"; 
+  const startTime = "2023-09-17 00:00:00"; 
 
   //const startTime = "2026-04-01 00:00:00"; 
-    const endTime = "2027-02-06 17:25:00";
+    const endTime = "2027-10-21 00:00:00";
   //const endTime = "2026-03-25 20:45:00";
 
   const datapath2 = datapath; 

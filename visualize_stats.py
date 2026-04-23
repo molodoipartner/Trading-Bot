@@ -166,6 +166,40 @@ else:
 # ======================================================
 # === ТАБЛИЦА СТАТИСТИКИ
 # ======================================================
+# ======================================================
+# === МАКСИМАЛЬНАЯ ПРОСАДКА ПО БАЛАНСУ (от 0)
+# ======================================================
+
+
+
+# --- сортируем сделки по времени выхода
+trades_sorted = sorted(
+    trades,
+    key=lambda x: parse_datetime(x["exitTime"]) if x.get("exitTime") else datetime.min
+)
+
+balance = 0
+peak = 0
+max_drawdown = 0
+
+for trade in trades_sorted:
+
+    profit = float(trade.get("profitQuoted", 0))
+    balance += profit
+
+    # обновляем пик
+    if balance > peak:
+        peak = balance
+
+    # считаем просадку от пика
+    drawdown = peak - balance
+
+    # обновляем максимум
+    if drawdown > max_drawdown:
+        max_drawdown = drawdown
+
+# --- формат для вывода
+max_dd_display = f"{max_drawdown:.2f}"
 
 info_lines = [
 
@@ -177,6 +211,7 @@ info_lines = [
     ("Средняя прибыль", stats["averageProfitQuoted"]),
     ("Макс. прибыль", stats["maxProfitQuoted"]),
     ("Макс. убыток", stats["maxLossQuoted"]),
+    ("Макс. просадка по балансу", max_dd_display),
     ("Ср. сделок в день", stats["averageTradesPerDay"]),
     ("LONG-сделок", stats["longTrades"]),
     ("SHORT-сделок", stats["shortTrades"]),
@@ -262,14 +297,15 @@ for trade in trades:
     try:
         dt = datetime.strptime(entry_time, "%Y-%m-%d %H:%M:%S")
         hour = dt.strftime("%H")
-        weekday = dt.strftime("%a")  # "Mon", "Tue", ...
+        weekday = dt.strftime("%a")
     except Exception as e:
         print(f"Ошибка разбора времени {entry_time}: {e}")
         continue
 
-    # Обработка по часам
+    # === По часам ===
     hour_stats[hour]["total"] += 1
     hour_stats[hour]["profit"] += profit
+
     if result == "TAKE":
         hour_stats[hour]["wins"] += 1
     elif result == "STOP":
@@ -277,12 +313,13 @@ for trade in trades:
     else:
         hour_stats[hour]["none"] += 1
 
-    # Обработка по дням недели
+    # === По дням недели ===
     if weekday not in weekday_stats:
         weekday_stats[weekday] = {"total": 0, "wins": 0, "losses": 0, "none": 0, "profit": 0.0}
 
     weekday_stats[weekday]["total"] += 1
     weekday_stats[weekday]["profit"] += profit
+
     if result == "TAKE":
         weekday_stats[weekday]["wins"] += 1
     elif result == "STOP":
@@ -290,42 +327,101 @@ for trade in trades:
     else:
         weekday_stats[weekday]["none"] += 1
 
+
 # === Заполнение недостающих дней недели ===
 day_order = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 for d in day_order:
     if d not in weekday_stats:
         weekday_stats[d] = {"total": 0, "wins": 0, "losses": 0, "none": 0, "profit": 0.0}
-"""
-"""
+
+
+# ======================================================
 # === 📊 Сделки по часам ===
+# ======================================================
+
 hours = sorted(hour_stats.keys(), key=lambda x: int(x))
+
 wins_hour = [hour_stats[h]["wins"] for h in hours]
 losses_hour = [hour_stats[h]["losses"] for h in hours]
+
 profit_hour = [round(hour_stats[h]["profit"], 2) for h in hours]
-avg_profit_hour = moving_average(profit_hour, window_size=5)
+
+# 🔥 НОВОЕ: средний профит на сделку (ВАЖНО)
+avg_profit_per_trade = [
+    (hour_stats[h]["profit"] / hour_stats[h]["total"])
+    if hour_stats[h]["total"] > 0 else 0
+    for h in hours
+]
+
+# сглаживание (уже нормальное)
+avg_profit_hour = moving_average(avg_profit_per_trade, window_size=5)
+
 total_trades_hour = [wins_hour[i] + losses_hour[i] for i in range(len(hours))]
 avg_trades_hour2 = moving_average(total_trades_hour, window_size=5)
 
+
 plt.figure(figsize=(12, 6))
+
 plt.bar(hours, wins_hour, label="Профитные", color="green")
 plt.bar(hours, losses_hour, bottom=wins_hour, label="Убыточные", color="red")
-plt.plot(hours, avg_trades_hour2, color="blue", linestyle="--", linewidth=2, marker='o', label="Скользящее ср. сделок")
+
+plt.plot(
+    hours,
+    avg_trades_hour2,
+    color="blue",
+    linestyle="--",
+    linewidth=2,
+    marker='o',
+    label="Скользящее ср. сделок"
+)
+
 plt.xlabel("Час суток")
 plt.ylabel("Количество сделок")
 plt.title("Сделки по часам")
+
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
 plt.savefig("result/hour_stats.png")
 plt.close()
 
-# === 📈 Профит по часам + скользящее среднее ===
+
+# ======================================================
+# === 📈 Профит по часам (УЛУЧШЕННЫЙ)
+# ======================================================
+
 plt.figure(figsize=(12, 6))
-plt.bar(hours, profit_hour, color="purple", label="Профит")
-plt.plot(hours, avg_profit_hour, color="black", linestyle="--", linewidth=2, marker='o', label="Скользящее среднее")
+
+# суммарный профит (как у тебя)
+plt.bar(hours, profit_hour, color="purple", alpha=0.4, label="Total Profit")
+
+# 🔥 НОВОЕ: средний профит (самое важное)
+plt.plot(
+    hours,
+    avg_profit_per_trade,
+    color="orange",
+    linewidth=2,
+    marker='o',
+    label="Avg profit per trade"
+)
+
+# сглаживание
+plt.plot(
+    hours,
+    avg_profit_hour,
+    color="black",
+    linestyle="--",
+    linewidth=2,
+    label="Smoothed avg profit"
+)
+
+# линия нуля
+plt.axhline(0, linestyle="--", alpha=0.5)
+
 plt.xlabel("Час суток")
-plt.ylabel("Суммарный профит")
+plt.ylabel("Профит")
 plt.title("Профит по часам")
+
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
@@ -446,8 +542,7 @@ plt.close()
 # === (только positionNumber = 1)
 # ======================================================
 
-from datetime import datetime
-import matplotlib.pyplot as plt
+
 
 trade_durations = []
 
@@ -660,11 +755,14 @@ def plot_changepercent_duration(trades):
 def plot_candlesbetween_with_avg_positions(trades):
 
     from collections import defaultdict
-    import matplotlib.pyplot as plt
     import numpy as np
+    import matplotlib.pyplot as plt
 
     # candlesBetween -> список amount_of_trades
     data = defaultdict(list)
+
+    # 🔥 ДОБАВЛЯЕМ profit
+    profit_data = defaultdict(list)
 
     for trade in trades:
         if trade.get("positionNumber") != 1:
@@ -672,6 +770,7 @@ def plot_candlesbetween_with_avg_positions(trades):
 
         cb = trade.get("candlesBetween")
         amt = trade.get("amount_of_trades")
+        profit = trade.get("profitQuoted")
 
         if cb is None or amt is None:
             continue
@@ -679,10 +778,12 @@ def plot_candlesbetween_with_avg_positions(trades):
         try:
             cb = int(cb)
             amt = int(amt)
+            profit = float(profit) if profit is not None else 0
         except:
             continue
 
         data[cb].append(amt)
+        profit_data[cb].append(profit)
 
     if not data:
         print("Нет данных")
@@ -697,6 +798,9 @@ def plot_candlesbetween_with_avg_positions(trades):
     # Y2 — среднее количество позиций
     avg_positions = [sum(data[val]) / len(data[val]) for val in x]
 
+    # 🔥 TOTAL PROFIT
+    total_profit = [sum(profit_data[val]) for val in x]
+
     # 🎨 цвета по плотности
     colors = [
         "green" if c <= np.percentile(counts, 33)
@@ -707,14 +811,27 @@ def plot_candlesbetween_with_avg_positions(trades):
 
     plt.figure(figsize=(15, 7))
 
-    # === ОСНОВНОЙ ГРАФИК (как у тебя)
+    # === ОСНОВНОЙ ГРАФИК
     plt.vlines(x, [0], counts, alpha=0.2)
     plt.scatter(x, counts, c=colors, alpha=0.7, label="Trade count")
 
     plt.xlabel("candlesBetween")
     plt.ylabel("Number of trades")
 
-    # === ВТОРАЯ ОСЬ (🔥 ключевая штука)
+    # === 🔥 ДОБАВИЛИ PROFIT (та же ось)
+    plt.plot(
+        x,
+        total_profit,
+        linestyle="--",
+        linewidth=2,
+        marker="o",
+        label="Total Profit"
+    )
+
+    # линия нуля (очень полезно)
+    plt.axhline(0, linestyle=":", alpha=0.5)
+
+    # === ВТОРАЯ ОСЬ
     ax2 = plt.gca().twinx()
 
     ax2.plot(
@@ -731,7 +848,7 @@ def plot_candlesbetween_with_avg_positions(trades):
     step = 1
     plt.xticks(np.arange(min(x), max(x) + step, step))
 
-    plt.title("candlesBetween vs trades + avg positions")
+    plt.title("candlesBetween vs trades + avg positions + profit")
 
     # === объединяем легенды
     lines_1, labels_1 = plt.gca().get_legend_handles_labels()
@@ -744,7 +861,6 @@ def plot_candlesbetween_with_avg_positions(trades):
 
     plt.savefig("result/topresult/candlesbetween_with_avg_positions.png", dpi=150)
     plt.close()
-
 
 def plot_volumeindex_duration(trades):
 
@@ -846,7 +962,15 @@ def plot_volumeindex_duration(trades):
 
 def plot_volumeindex_duration2(trades):
 
+    from collections import defaultdict
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from datetime import datetime
+
     trade_points = []
+
+    # 🔥 для профита
+    profit_data = defaultdict(list)
 
     for trade in trades:
         if trade.get("positionNumber") != 1:
@@ -860,10 +984,17 @@ def plot_volumeindex_duration2(trades):
             if duration <= 0:
                 continue
 
+            x_val = float(trade["volumeindex2"])
+            profit = float(trade.get("profitQuoted", 0))
+
             trade_points.append({
-                "x": float(trade["volumeindex2"]),
+                "x": x_val,
                 "y": duration
             })
+
+            # 🔥 округляем чтобы сгруппировать
+            x_rounded = round(x_val, 2)
+            profit_data[x_rounded].append(profit)
 
         except:
             continue
@@ -879,67 +1010,51 @@ def plot_volumeindex_duration2(trades):
     x, y, colors = zip(*sorted(zip(x, y, colors)))
 
     plt.figure(figsize=(15, 7))
+
+    # === ТВОЙ ГРАФИК
     plt.vlines(x, [0], y, alpha=0.15)
     plt.scatter(x, y, c=colors, alpha=0.6)
 
-    plt.title("volumeIndex2 vs duration")
+    plt.title("volumeIndex2 vs duration + profit")
     plt.xlabel("volumeIndex2")
     plt.ylabel("Hours")
-    # === ШАГ ОСИ X
-    step = 0.02  # 👈 меняй: 0.01 / 0.02 / 0.05
 
+    # === ОСЬ X
+    step = 0.02
     plt.xticks(np.arange(
         round(min(x), 2),
         round(max(x), 2) + step,
         step
     ))
-
     plt.xticks(rotation=45)
+
     plt.grid(True)
 
-    short_x = [xi for xi, yi in zip(x, y) if yi <= 6]
-    long_x  = [xi for xi, yi in zip(x, y) if yi >= 24]
+    # ======================================================
+    # 🔥 PROFIT LINE (вот это главное)
+    # ======================================================
 
-    x_range = np.linspace(min(x), max(x), 1000)
-
-    kde_short = gaussian_kde(short_x if len(short_x) > 1 else [0, 0.0001], bw_method=0.2)
-    kde_long  = gaussian_kde(long_x  if len(long_x) > 1 else [0, 0.0001], bw_method=0.2)
-
-    y_short = kde_short(x_range)
-    y_long  = kde_long(x_range)
-
-    y_short_scaled = y_short * max(y) * 0.4
-    y_long_scaled  = y_long  * max(y) * 0.7
-
-    plt.plot(x_range, y_short_scaled, color="green", alpha=0.7)
-    plt.plot(x_range, y_long_scaled,  color="red",   alpha=0.7)
-
-    # === EDGE
-    edge = (y_short_scaled - y_long_scaled) / (y_short_scaled + y_long_scaled + 1e-9)
-    edge_norm = (edge + 1) / 2
-    edge_scaled = edge_norm * max(y) * 0.8
-
-    plt.plot(x_range, edge_scaled, color="blue", linewidth=1, label="Edge")
-
-    # === EDGE С УЧЁТОМ КОЛИЧЕСТВА
-    confidence = y_short_scaled + y_long_scaled
-    confidence_norm = confidence / (np.max(confidence) + 1e-9)
-
-    edge_weighted = edge_norm * confidence_norm
-    edge_weighted_scaled = edge_weighted * max(y) * 0.9
+    x_profit = sorted(profit_data.keys())
+    total_profit = [sum(profit_data[val]) for val in x_profit]
 
     plt.plot(
-        x_range,
-        edge_weighted_scaled,
-        color="purple",
-        linewidth=1,
-        label="Edge (weighted)"
+        x_profit,
+        total_profit,
+        color="blue",
+        linewidth=2,
+        marker="o",
+        label="Total Profit"
     )
+
+    # линия нуля
+    plt.axhline(0, linestyle="--", alpha=0.5)
 
     plt.legend()
     plt.tight_layout()
+
     plt.savefig("result/volume/all_trades12_volumeindex_map.png", dpi=150)
     plt.close()
+
 def plot_volumeindex_duration3(trades):
 
     trade_points = []
@@ -1375,7 +1490,89 @@ plt.tight_layout()
 plt.savefig("result/weekday_duration_avg_pos1.png")
 plt.close()
 
+# === ИНИЦИАЛИЗАЦИЯ ===
+profit_weekday_stats = {
+    d: {"total": 0, "profit_sum": 0.0, "profit_avg": 0.0}
+    for d in day_order
+}
 
+for trade in trades:
+    # фильтр
+    if trade.get("positionNumber") != 1:
+        continue
+
+    entry_time = trade.get("entryTime")
+    profit = trade.get("profitQuoted")
+
+    if not entry_time or profit is None:
+        continue
+
+    try:
+        dt_entry = datetime.strptime(entry_time, "%Y-%m-%d %H:%M:%S")
+        weekday = dt_entry.strftime("%a")  # Mon, Tue, ...
+        profit = float(profit)
+    except Exception as e:
+        print(f"Ошибка разбора времени {entry_time}: {e}")
+        continue
+
+    profit_weekday_stats[weekday]["total"] += 1
+    profit_weekday_stats[weekday]["profit_sum"] += profit
+
+
+# === СЧИТАЕМ СРЕДНИЙ ПРОФИТ ===
+for d in profit_weekday_stats:
+    if profit_weekday_stats[d]["total"] > 0:
+        profit_weekday_stats[d]["profit_avg"] = (
+            profit_weekday_stats[d]["profit_sum"] /
+            profit_weekday_stats[d]["total"]
+        )
+
+
+# ======================================================
+# === ГРАФИК
+# ======================================================
+
+days = day_order
+
+profit_sum_weekday = [
+    round(profit_weekday_stats[d]["profit_sum"], 2)
+    for d in days
+]
+
+profit_avg_weekday = [
+    round(profit_weekday_stats[d]["profit_avg"], 2)
+    for d in days
+]
+
+
+plt.figure(figsize=(10, 5))
+
+# === СУММАРНЫЙ ПРОФИТ (как у тебя было)
+plt.bar(days, profit_sum_weekday, color="steelblue", alpha=0.4, label="Total Profit")
+
+# === СРЕДНИЙ ПРОФИТ (самое важное)
+plt.plot(
+    days,
+    profit_avg_weekday,
+    color="orange",
+    linewidth=2,
+    marker='o',
+    label="Avg Profit per Trade"
+)
+
+# линия нуля
+plt.axhline(0, linestyle="--", alpha=0.5)
+
+plt.xlabel("День недели")
+plt.ylabel("Профит")
+plt.title("Профит по дням недели (positionNumber=1)")
+
+plt.legend()
+plt.grid(True, axis='y')
+plt.tight_layout()
+
+plt.savefig("result/weekday_profit_pos1.png")
+plt.close()
 """
 # === 📈 Кривая накопленной дистанции (без знака) ===
 timestamps = []
