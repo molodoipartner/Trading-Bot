@@ -69,7 +69,7 @@ function expoPercents(
 
 const VOLATILITY_CHECK_HOURS = [20, 21, 22, 23];
 
-const deposit = 1230; // общий депозит для расчёта объёмов (можно менять, не влияет на стратегию)
+const deposit = 1280; // общий депозит для расчёта объёмов (можно менять, не влияет на стратегию)
 //const deposit = 650;
 // ================= CONFIG =================
   const LOOKBACK_HOURS = 95;

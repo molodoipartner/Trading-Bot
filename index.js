@@ -1,4 +1,4 @@
-//require('./runpy.js');
+require('./runpy.js');
 //require('./runpyXAU.js');
 /*
 const http = require("http");

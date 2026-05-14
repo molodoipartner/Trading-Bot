@@ -31,10 +31,10 @@ function rangeSteps(start, end, step) {
 
 async function main() {
     const symbol = "ETHUSDT";
-    const intervalMinutes = 5;
+    const intervalMinutes = 1;
 
     const now = Date.now();
-    const twoYearsAgo = now - 1000 * 60 * 60 * 24 * 365 * 5;
+    const twoYearsAgo = now - 1000 * 60 * 60 * 24 * 5;
 
     const minutes = (1000 * 60 * intervalMinutes);
     const candlesPerChunk = 1000;
@@ -78,7 +78,7 @@ async function main() {
         csv += `${date},${open},${high},${low},${close},0,0,0\n`;
     }
 
-    fs.writeFileSync("backtest/ETHUSDT_5m.csv", csv);
+    fs.writeFileSync("backtest/ETHUSDT_1m.csv", csv);
     console.log("Saved", sorted.length, "candles.");
 }
 
